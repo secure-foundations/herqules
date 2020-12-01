@@ -1,0 +1,18 @@
+diff --git a/benchspec/CPU2006/483.xalancbmk/src/SchemaValidator.cpp b/benchspec/CPU2006/483.xalancbmk/src/SchemaValidator.cpp
+index d974cef0..c4fba802 100644
+--- a/benchspec/CPU2006/483.xalancbmk/src/SchemaValidator.cpp
++++ b/benchspec/CPU2006/483.xalancbmk/src/SchemaValidator.cpp
+@@ -1015,10 +1015,11 @@ void SchemaValidator::preContentValidation(bool,
+     RefHashTableOfEnumerator<Grammar> grammarEnum = fGrammarResolver->getGrammarEnumerator();
+     while (grammarEnum.hasMoreElements())
+     {
+-        SchemaGrammar& sGrammar = (SchemaGrammar&) grammarEnum.nextElement();
+-        if (sGrammar.getGrammarType() != Grammar::SchemaGrammarType || sGrammar.getValidated())
++        Grammar& Grammar = grammarEnum.nextElement();
++        if (Grammar.getGrammarType() != Grammar::SchemaGrammarType || Grammar.getValidated())
+              continue;
+ 
++        SchemaGrammar &sGrammar = (SchemaGrammar&) Grammar;
+         sGrammar.setValidated(true);
+ 
+         RefHash3KeysIdPoolEnumerator<SchemaElementDecl> elemEnum = sGrammar.getElemEnumerator();

@@ -1,0 +1,8 @@
+.vscode
+build/
+**/Makefile
+kernel/dfl.h
+kernel/feature-dev.h
+kernel/xarray.c
+kernel/xarray.h
+simulations/zsim/build/

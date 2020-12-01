@@ -1,0 +1,34 @@
+diff --git a/benchspec/CPU/526.blender_r/src/blender/source/creator/creator.c b/benchspec/CPU/526.blender_r/src/blender/source/creator/creator.c
+index db85d882..41876176 100644
+--- a/benchspec/CPU/526.blender_r/src/blender/source/creator/creator.c
++++ b/benchspec/CPU/526.blender_r/src/blender/source/creator/creator.c
+@@ -51,7 +51,7 @@
+ #endif
+ 
+ /* for backtrace */
+-#if defined(__linux__) || defined(__APPLE__)
++#if (defined(__linux__) && defined(__GLIBC__)) || defined(__APPLE__)
+ #  include <execinfo.h>
+ #elif defined(_MSC_VER)
+ #  include <DbgHelp.h>
+@@ -517,7 +517,7 @@ static int set_fpe(int UNUSED(argc), const char **UNUSED(argv), void *UNUSED(dat
+ 	return 0;
+ }
+ 
+-#if defined(__linux__) || defined(__APPLE__)
++#if (defined(__linux__) && defined(__GLIBC__)) || defined(__APPLE__)
+ 
+ /* Unix */
+ static void blender_crash_handler_backtrace(FILE *fp)
+diff --git a/benchspec/CPU/526.blender_r/src/spec_backtrace.c b/benchspec/CPU/526.blender_r/src/spec_backtrace.c
+index 72648ff4..e2c47758 100644
+--- a/benchspec/CPU/526.blender_r/src/spec_backtrace.c
++++ b/benchspec/CPU/526.blender_r/src/spec_backtrace.c
+@@ -1,6 +1,6 @@
+ #include "spec_backtrace.h"
+ 
+-#if defined(SPEC_LINUX)
++#if defined(SPEC_LINUX) && defined(__GLIBC__)
+ 
+ #include <stdio.h>
+ #include <stdlib.h>

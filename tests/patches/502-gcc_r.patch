@@ -1,0 +1,30 @@
+diff --git a/benchspec/CPU/502.gcc_r/src/include/obstack.h b/benchspec/CPU/502.gcc_r/src/include/obstack.h
+index bc0506d..b22d5bb 100644
+--- a/benchspec/CPU/502.gcc_r/src/include/obstack.h
++++ b/benchspec/CPU/502.gcc_r/src/include/obstack.h
+@@ -529,25 +529,6 @@ __extension__								\
+   (h)->object_base = (h)->next_free,					\
+   (void *) __INT_TO_PTR ((h)->temp))
+ 
+-#if defined(SPEC)
+-/* This should be okay because obstack_free is never used in a context
+- * where a return value is expected.
+- */
+-# define obstack_free(h,obj)						\
+-( (h)->temp = (char *) (obj) - (char *) (h)->chunk,			\
+-  (((h)->temp > 0 && (h)->temp < (h)->chunk_limit - (char *) (h)->chunk)\
+-   ? (ptrdiff_t) ((h)->next_free = (h)->object_base				\
+-	    = (h)->temp + (char *) (h)->chunk)				\
+-   : ((obstack_free) ((h), (h)->temp + (char *) (h)->chunk), 0)))
+-#else
+-# define obstack_free(h,obj)						\
+-( (h)->temp = (char *) (obj) - (char *) (h)->chunk,			\
+-  (((h)->temp > 0 && (h)->temp < (h)->chunk_limit - (char *) (h)->chunk)\
+-   ? (int) ((h)->next_free = (h)->object_base				\
+-	    = (h)->temp + (char *) (h)->chunk)				\
+-   : (((obstack_free) ((h), (h)->temp + (char *) (h)->chunk), 0), 0)))
+-#endif
+-
+ #endif /* not __GNUC__ or not __STDC__ */
+ 
+ #ifdef __cplusplus

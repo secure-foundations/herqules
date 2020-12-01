@@ -1,0 +1,2790 @@
+diff --git a/benchspec/CPU2006/471.omnetpp/src/EtherAppCli.cc b/benchspec/CPU2006/471.omnetpp/src/EtherAppCli.cc
+index 57077011..0764ae1b 100755
+--- a/benchspec/CPU2006/471.omnetpp/src/EtherAppCli.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/EtherAppCli.cc
+@@ -128,7 +128,7 @@ MACAddress EtherAppCli::resolveDestMACAddress()
+ #else
+         std::string destModName = std::string(destStation) + ".mac";
+ #endif
+-        cModule *destMod = simulation.moduleByPath(destModName.c_str());
++        cModule *destMod = getSimulation().moduleByPath(destModName.c_str());
+         if (!destMod)
+             error("module `%s' (MAC submodule of `destStation') not found", destModName.c_str());
+         destMACAddress.setAddress(destMod->par("address"));
+diff --git a/benchspec/CPU2006/471.omnetpp/src/EtherEncap.cc b/benchspec/CPU2006/471.omnetpp/src/EtherEncap.cc
+index 218f9bc7..b68c864b 100755
+--- a/benchspec/CPU2006/471.omnetpp/src/EtherEncap.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/EtherEncap.cc
+@@ -107,7 +107,7 @@ void EtherEncap::processPacketFromHigherLayer(cMessage *msg)
+ 
+     // create Ethernet frame, fill it in from EtherCtrl and encapsulate msg in it
+     EV << "Encapsulating higher layer packet `" << msg->name() <<"' for MAC\n";
+-    EV << "Sent from " << simulation.module(msg->senderModuleId())->fullPath() << " at " << msg->sendingTime() << " and was created " << msg->creationTime() <<  "\n";
++    EV << "Sent from " << getSimulation().module(msg->senderModuleId())->fullPath() << " at " << msg->sendingTime() << " and was created " << msg->creationTime() <<  "\n";
+ 
+     EtherCtrl *etherctrl = check_and_cast<EtherCtrl*>(M30(msg)->removeControlInfo());
+     EthernetIIFrame *frame = new EthernetIIFrame(msg->name(), ETH_FRAME);
+diff --git a/benchspec/CPU2006/471.omnetpp/src/EtherHost_n.cc b/benchspec/CPU2006/471.omnetpp/src/EtherHost_n.cc
+index c195118c..87585fd4 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/EtherHost_n.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/EtherHost_n.cc
+@@ -133,8 +133,8 @@ void EtherHost::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	cli_mod = modtype->create( "cli", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -165,8 +165,8 @@ void EtherHost::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	srv_mod = modtype->create( "srv", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -197,8 +197,8 @@ void EtherHost::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	llc_mod = modtype->create( "llc", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -238,8 +238,8 @@ void EtherHost::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	mac_mod = modtype->create( "mac", mod, islocal);
+ 	check_error(); check_memory();
+ 
+diff --git a/benchspec/CPU2006/471.omnetpp/src/EtherLLC.cc b/benchspec/CPU2006/471.omnetpp/src/EtherLLC.cc
+index 7f7da8f0..89b1e6c1 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/EtherLLC.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/EtherLLC.cc
+@@ -124,7 +124,7 @@ void EtherLLC::processPacketFromHigherLayer(cMessage *msg)
+ 
+     // create Ethernet frame, fill it in from EtherCtrl and encapsulate msg in it
+     EV << "Encapsulating higher layer packet `" << msg->name() <<"' for MAC\n";
+-    EV << "Sent from " << simulation.module(msg->senderModuleId())->fullPath() << " at " << msg->sendingTime() << " and was created " << msg->creationTime() <<  "\n";
++    EV << "Sent from " << getSimulation().module(msg->senderModuleId())->fullPath() << " at " << msg->sendingTime() << " and was created " << msg->creationTime() <<  "\n";
+ 
+     EtherCtrl *etherctrl = dynamic_cast<EtherCtrl *>(M30(msg)->removeControlInfo());
+     if (!etherctrl)
+diff --git a/benchspec/CPU2006/471.omnetpp/src/EtherSwitch_n.cc b/benchspec/CPU2006/471.omnetpp/src/EtherSwitch_n.cc
+index 9f1e76cf..09acbd1c 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/EtherSwitch_n.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/EtherSwitch_n.cc
+@@ -139,8 +139,8 @@ void EtherSwitch::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	relayUnit_mod = modtype->create( "relayUnit", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -187,8 +187,8 @@ void EtherSwitch::doBuildInside()
+ 		check_error(); check_memory();
+ 
+ 		// module creation:
+-		islocal = simulation.netInterface()==NULL ||
+-		          simulation.netInterface()->isLocalMachineIn( machines );
++		islocal = getSimulation().netInterface()==NULL ||
++		          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 		mac_mod[sub_i] = modtype->create( "mac", mod, islocal);
+ 		check_error(); check_memory();
+ 
+diff --git a/benchspec/CPU2006/471.omnetpp/src/LargeNet_n.cc b/benchspec/CPU2006/471.omnetpp/src/LargeNet_n.cc
+index 358b592a..a7bbc795 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/LargeNet_n.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/LargeNet_n.cc
+@@ -158,8 +158,8 @@ void SmallLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	hub_mod = modtype->create( "hub", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -215,8 +215,8 @@ void SmallLAN::doBuildInside()
+ 		check_error(); check_memory();
+ 
+ 		// module creation:
+-		islocal = simulation.netInterface()==NULL ||
+-		          simulation.netInterface()->isLocalMachineIn( machines );
++		islocal = getSimulation().netInterface()==NULL ||
++		          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 		host_mod[sub_i] = modtype->create( "host", mod, islocal);
+ 		check_error(); check_memory();
+ 
+@@ -397,8 +397,8 @@ void MediumLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	switch_mod = modtype->create( "switch", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -454,8 +454,8 @@ void MediumLAN::doBuildInside()
+ 		check_error(); check_memory();
+ 
+ 		// module creation:
+-		islocal = simulation.netInterface()==NULL ||
+-		          simulation.netInterface()->isLocalMachineIn( machines );
++		islocal = getSimulation().netInterface()==NULL ||
++		          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 		host_mod[sub_i] = modtype->create( "host", mod, islocal);
+ 		check_error(); check_memory();
+ 
+@@ -489,8 +489,8 @@ void MediumLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	hub_mod = modtype->create( "hub", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -546,8 +546,8 @@ void MediumLAN::doBuildInside()
+ 		check_error(); check_memory();
+ 
+ 		// module creation:
+-		islocal = simulation.netInterface()==NULL ||
+-		          simulation.netInterface()->isLocalMachineIn( machines );
++		islocal = getSimulation().netInterface()==NULL ||
++		          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 		hhost_mod[sub_i] = modtype->create( "hhost", mod, islocal);
+ 		check_error(); check_memory();
+ 
+@@ -843,8 +843,8 @@ void LargeLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	switch_mod = modtype->create( "switch", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -900,8 +900,8 @@ void LargeLAN::doBuildInside()
+ 		check_error(); check_memory();
+ 
+ 		// module creation:
+-		islocal = simulation.netInterface()==NULL ||
+-		          simulation.netInterface()->isLocalMachineIn( machines );
++		islocal = getSimulation().netInterface()==NULL ||
++		          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 		host_mod[sub_i] = modtype->create( "host", mod, islocal);
+ 		check_error(); check_memory();
+ 
+@@ -935,8 +935,8 @@ void LargeLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	hub_mod = modtype->create( "hub", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -992,8 +992,8 @@ void LargeLAN::doBuildInside()
+ 		check_error(); check_memory();
+ 
+ 		// module creation:
+-		islocal = simulation.netInterface()==NULL ||
+-		          simulation.netInterface()->isLocalMachineIn( machines );
++		islocal = getSimulation().netInterface()==NULL ||
++		          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 		hhost_mod[sub_i] = modtype->create( "hhost", mod, islocal);
+ 		check_error(); check_memory();
+ 
+@@ -1027,8 +1027,8 @@ void LargeLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	bus_mod = modtype->create( "bus", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -1093,8 +1093,8 @@ void LargeLAN::doBuildInside()
+ 		check_error(); check_memory();
+ 
+ 		// module creation:
+-		islocal = simulation.netInterface()==NULL ||
+-		          simulation.netInterface()->isLocalMachineIn( machines );
++		islocal = getSimulation().netInterface()==NULL ||
++		          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 		bhost_mod[sub_i] = modtype->create( "bhost", mod, islocal);
+ 		check_error(); check_memory();
+ 
+@@ -1515,8 +1515,8 @@ void LargeNet::doBuildInside()
+ 		check_error(); check_memory();
+ 
+ 		// module creation:
+-		islocal = simulation.netInterface()==NULL ||
+-		          simulation.netInterface()->isLocalMachineIn( machines );
++		islocal = getSimulation().netInterface()==NULL ||
++		          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 		switchBB_mod[sub_i] = modtype->create( "switchBB", mod, islocal);
+ 		check_error(); check_memory();
+ 
+@@ -1589,8 +1589,8 @@ void LargeNet::doBuildInside()
+ 		check_error(); check_memory();
+ 
+ 		// module creation:
+-		islocal = simulation.netInterface()==NULL ||
+-		          simulation.netInterface()->isLocalMachineIn( machines );
++		islocal = getSimulation().netInterface()==NULL ||
++		          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 		slanBB_mod[sub_i] = modtype->create( "slanBB", mod, islocal);
+ 		check_error(); check_memory();
+ 
+@@ -1634,8 +1634,8 @@ void LargeNet::doBuildInside()
+ 		check_error(); check_memory();
+ 
+ 		// module creation:
+-		islocal = simulation.netInterface()==NULL ||
+-		          simulation.netInterface()->isLocalMachineIn( machines );
++		islocal = getSimulation().netInterface()==NULL ||
++		          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 		mlanBB_mod[sub_i] = modtype->create( "mlanBB", mod, islocal);
+ 		check_error(); check_memory();
+ 
+@@ -1679,8 +1679,8 @@ void LargeNet::doBuildInside()
+ 		check_error(); check_memory();
+ 
+ 		// module creation:
+-		islocal = simulation.netInterface()==NULL ||
+-		          simulation.netInterface()->isLocalMachineIn( machines );
++		islocal = getSimulation().netInterface()==NULL ||
++		          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 		llanBB_mod[sub_i] = modtype->create( "llanBB", mod, islocal);
+ 		check_error(); check_memory();
+ 
+@@ -1714,8 +1714,8 @@ void LargeNet::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	switchA_mod = modtype->create( "switchA", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -1775,8 +1775,8 @@ void LargeNet::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	serverA_mod = modtype->create( "serverA", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -1811,8 +1811,8 @@ void LargeNet::doBuildInside()
+ 		check_error(); check_memory();
+ 
+ 		// module creation:
+-		islocal = simulation.netInterface()==NULL ||
+-		          simulation.netInterface()->isLocalMachineIn( machines );
++		islocal = getSimulation().netInterface()==NULL ||
++		          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 		slanA_mod[sub_i] = modtype->create( "slanA", mod, islocal);
+ 		check_error(); check_memory();
+ 
+@@ -1850,8 +1850,8 @@ void LargeNet::doBuildInside()
+ 		check_error(); check_memory();
+ 
+ 		// module creation:
+-		islocal = simulation.netInterface()==NULL ||
+-		          simulation.netInterface()->isLocalMachineIn( machines );
++		islocal = getSimulation().netInterface()==NULL ||
++		          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 		mlanA_mod[sub_i] = modtype->create( "mlanA", mod, islocal);
+ 		check_error(); check_memory();
+ 
+@@ -1889,8 +1889,8 @@ void LargeNet::doBuildInside()
+ 		check_error(); check_memory();
+ 
+ 		// module creation:
+-		islocal = simulation.netInterface()==NULL ||
+-		          simulation.netInterface()->isLocalMachineIn( machines );
++		islocal = getSimulation().netInterface()==NULL ||
++		          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 		llanA_mod[sub_i] = modtype->create( "llanA", mod, islocal);
+ 		check_error(); check_memory();
+ 
+@@ -1924,8 +1924,8 @@ void LargeNet::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	switchB_mod = modtype->create( "switchB", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -1985,8 +1985,8 @@ void LargeNet::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	serverB_mod = modtype->create( "serverB", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -2021,8 +2021,8 @@ void LargeNet::doBuildInside()
+ 		check_error(); check_memory();
+ 
+ 		// module creation:
+-		islocal = simulation.netInterface()==NULL ||
+-		          simulation.netInterface()->isLocalMachineIn( machines );
++		islocal = getSimulation().netInterface()==NULL ||
++		          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 		slanB_mod[sub_i] = modtype->create( "slanB", mod, islocal);
+ 		check_error(); check_memory();
+ 
+@@ -2060,8 +2060,8 @@ void LargeNet::doBuildInside()
+ 		check_error(); check_memory();
+ 
+ 		// module creation:
+-		islocal = simulation.netInterface()==NULL ||
+-		          simulation.netInterface()->isLocalMachineIn( machines );
++		islocal = getSimulation().netInterface()==NULL ||
++		          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 		mlanB_mod[sub_i] = modtype->create( "mlanB", mod, islocal);
+ 		check_error(); check_memory();
+ 
+@@ -2099,8 +2099,8 @@ void LargeNet::doBuildInside()
+ 		check_error(); check_memory();
+ 
+ 		// module creation:
+-		islocal = simulation.netInterface()==NULL ||
+-		          simulation.netInterface()->isLocalMachineIn( machines );
++		islocal = getSimulation().netInterface()==NULL ||
++		          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 		llanB_mod[sub_i] = modtype->create( "llanB", mod, islocal);
+ 		check_error(); check_memory();
+ 
+@@ -2134,8 +2134,8 @@ void LargeNet::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	switchC_mod = modtype->create( "switchC", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -2195,8 +2195,8 @@ void LargeNet::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	serverC_mod = modtype->create( "serverC", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -2231,8 +2231,8 @@ void LargeNet::doBuildInside()
+ 		check_error(); check_memory();
+ 
+ 		// module creation:
+-		islocal = simulation.netInterface()==NULL ||
+-		          simulation.netInterface()->isLocalMachineIn( machines );
++		islocal = getSimulation().netInterface()==NULL ||
++		          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 		slanC_mod[sub_i] = modtype->create( "slanC", mod, islocal);
+ 		check_error(); check_memory();
+ 
+@@ -2270,8 +2270,8 @@ void LargeNet::doBuildInside()
+ 		check_error(); check_memory();
+ 
+ 		// module creation:
+-		islocal = simulation.netInterface()==NULL ||
+-		          simulation.netInterface()->isLocalMachineIn( machines );
++		islocal = getSimulation().netInterface()==NULL ||
++		          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 		mlanC_mod[sub_i] = modtype->create( "mlanC", mod, islocal);
+ 		check_error(); check_memory();
+ 
+@@ -2309,8 +2309,8 @@ void LargeNet::doBuildInside()
+ 		check_error(); check_memory();
+ 
+ 		// module creation:
+-		islocal = simulation.netInterface()==NULL ||
+-		          simulation.netInterface()->isLocalMachineIn( machines );
++		islocal = getSimulation().netInterface()==NULL ||
++		          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 		llanC_mod[sub_i] = modtype->create( "llanC", mod, islocal);
+ 		check_error(); check_memory();
+ 
+@@ -2344,8 +2344,8 @@ void LargeNet::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	switchD_mod = modtype->create( "switchD", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -2405,8 +2405,8 @@ void LargeNet::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	serverD_mod = modtype->create( "serverD", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -2441,8 +2441,8 @@ void LargeNet::doBuildInside()
+ 		check_error(); check_memory();
+ 
+ 		// module creation:
+-		islocal = simulation.netInterface()==NULL ||
+-		          simulation.netInterface()->isLocalMachineIn( machines );
++		islocal = getSimulation().netInterface()==NULL ||
++		          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 		slanD_mod[sub_i] = modtype->create( "slanD", mod, islocal);
+ 		check_error(); check_memory();
+ 
+@@ -2480,8 +2480,8 @@ void LargeNet::doBuildInside()
+ 		check_error(); check_memory();
+ 
+ 		// module creation:
+-		islocal = simulation.netInterface()==NULL ||
+-		          simulation.netInterface()->isLocalMachineIn( machines );
++		islocal = getSimulation().netInterface()==NULL ||
++		          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 		mlanD_mod[sub_i] = modtype->create( "mlanD", mod, islocal);
+ 		check_error(); check_memory();
+ 
+@@ -2519,8 +2519,8 @@ void LargeNet::doBuildInside()
+ 		check_error(); check_memory();
+ 
+ 		// module creation:
+-		islocal = simulation.netInterface()==NULL ||
+-		          simulation.netInterface()->isLocalMachineIn( machines );
++		islocal = getSimulation().netInterface()==NULL ||
++		          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 		llanD_mod[sub_i] = modtype->create( "llanD", mod, islocal);
+ 		check_error(); check_memory();
+ 
+@@ -4420,11 +4420,11 @@ void smallLAN::setupNetwork()
+ 	cModule *smallLAN_mod;
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	if (!islocal)
+ 	    throw new cException("Local machine `%s' is not among machines specified for this network",
+-	              simulation.netInterface()->localhost());
++	              getSimulation().netInterface()->localhost());
+ 	smallLAN_mod = modtype->create( "smallLAN", NULL, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -4480,11 +4480,11 @@ void largeLAN::setupNetwork()
+ 	cModule *largeLAN_mod;
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	if (!islocal)
+ 	    throw new cException("Local machine `%s' is not among machines specified for this network",
+-	              simulation.netInterface()->localhost());
++	              getSimulation().netInterface()->localhost());
+ 	largeLAN_mod = modtype->create( "largeLAN", NULL, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -4540,11 +4540,11 @@ void largeNet::setupNetwork()
+ 	cModule *largeNet_mod;
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	if (!islocal)
+ 	    throw new cException("Local machine `%s' is not among machines specified for this network",
+-	              simulation.netInterface()->localhost());
++	              getSimulation().netInterface()->localhost());
+ 	largeNet_mod = modtype->create( "largeNet", NULL, islocal);
+ 	check_error(); check_memory();
+ 
+diff --git a/benchspec/CPU2006/471.omnetpp/src/Networks_n.cc b/benchspec/CPU2006/471.omnetpp/src/Networks_n.cc
+index 5bfe771b..3eadae2e 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/Networks_n.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/Networks_n.cc
+@@ -131,8 +131,8 @@ void MixedLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	bus_mod = modtype->create( "bus", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -181,8 +181,8 @@ void MixedLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	busHostA_mod = modtype->create( "busHostA", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -213,8 +213,8 @@ void MixedLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	busHostB_mod = modtype->create( "busHostB", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -245,8 +245,8 @@ void MixedLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	busHostC_mod = modtype->create( "busHostC", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -277,8 +277,8 @@ void MixedLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	busHostD_mod = modtype->create( "busHostD", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -309,8 +309,8 @@ void MixedLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	switchHostA_mod = modtype->create( "switchHostA", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -341,8 +341,8 @@ void MixedLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	switchHostB_mod = modtype->create( "switchHostB", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -373,8 +373,8 @@ void MixedLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	switchHostC_mod = modtype->create( "switchHostC", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -405,8 +405,8 @@ void MixedLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	switchHostD_mod = modtype->create( "switchHostD", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -437,8 +437,8 @@ void MixedLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	switch_mod = modtype->create( "switch", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -478,8 +478,8 @@ void MixedLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	hubHostA_mod = modtype->create( "hubHostA", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -510,8 +510,8 @@ void MixedLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	hubHostB_mod = modtype->create( "hubHostB", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -542,8 +542,8 @@ void MixedLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	hubHostC_mod = modtype->create( "hubHostC", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -574,8 +574,8 @@ void MixedLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	hub_mod = modtype->create( "hub", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -1145,8 +1145,8 @@ void TwoHosts::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	hostA_mod = modtype->create( "hostA", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -1177,8 +1177,8 @@ void TwoHosts::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	hostB_mod = modtype->create( "hostB", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -1289,8 +1289,8 @@ void SwitchedLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	hostA_mod = modtype->create( "hostA", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -1321,8 +1321,8 @@ void SwitchedLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	hostB_mod = modtype->create( "hostB", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -1353,8 +1353,8 @@ void SwitchedLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	hostC_mod = modtype->create( "hostC", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -1385,8 +1385,8 @@ void SwitchedLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	hostD_mod = modtype->create( "hostD", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -1417,8 +1417,8 @@ void SwitchedLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	switch_mod = modtype->create( "switch", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -1654,8 +1654,8 @@ void HubLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	hostA_mod = modtype->create( "hostA", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -1686,8 +1686,8 @@ void HubLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	hostB_mod = modtype->create( "hostB", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -1718,8 +1718,8 @@ void HubLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	hostC_mod = modtype->create( "hostC", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -1750,8 +1750,8 @@ void HubLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	hostD_mod = modtype->create( "hostD", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -1782,8 +1782,8 @@ void HubLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	hub_mod = modtype->create( "hub", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -2019,8 +2019,8 @@ void BusLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	hostA_mod = modtype->create( "hostA", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -2051,8 +2051,8 @@ void BusLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	hostB_mod = modtype->create( "hostB", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -2083,8 +2083,8 @@ void BusLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	hostC_mod = modtype->create( "hostC", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -2115,8 +2115,8 @@ void BusLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	hostD_mod = modtype->create( "hostD", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -2147,8 +2147,8 @@ void BusLAN::doBuildInside()
+ 	check_error(); check_memory();
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	bus_mod = modtype->create( "bus", mod, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -2374,11 +2374,11 @@ void mixedLAN::setupNetwork()
+ 	cModule *mixedLAN_mod;
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	if (!islocal)
+ 	    throw new cException("Local machine `%s' is not among machines specified for this network",
+-	              simulation.netInterface()->localhost());
++	              getSimulation().netInterface()->localhost());
+ 	mixedLAN_mod = modtype->create( "mixedLAN", NULL, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -2434,11 +2434,11 @@ void twoHosts::setupNetwork()
+ 	cModule *twoHosts_mod;
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	if (!islocal)
+ 	    throw new cException("Local machine `%s' is not among machines specified for this network",
+-	              simulation.netInterface()->localhost());
++	              getSimulation().netInterface()->localhost());
+ 	twoHosts_mod = modtype->create( "twoHosts", NULL, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -2494,11 +2494,11 @@ void switchedLAN::setupNetwork()
+ 	cModule *switchedLAN_mod;
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	if (!islocal)
+ 	    throw new cException("Local machine `%s' is not among machines specified for this network",
+-	              simulation.netInterface()->localhost());
++	              getSimulation().netInterface()->localhost());
+ 	switchedLAN_mod = modtype->create( "switchedLAN", NULL, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -2554,11 +2554,11 @@ void hubLAN::setupNetwork()
+ 	cModule *hubLAN_mod;
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	if (!islocal)
+ 	    throw new cException("Local machine `%s' is not among machines specified for this network",
+-	              simulation.netInterface()->localhost());
++	              getSimulation().netInterface()->localhost());
+ 	hubLAN_mod = modtype->create( "hubLAN", NULL, islocal);
+ 	check_error(); check_memory();
+ 
+@@ -2614,11 +2614,11 @@ void busLAN::setupNetwork()
+ 	cModule *busLAN_mod;
+ 
+ 	// module creation:
+-	islocal = simulation.netInterface()==NULL ||
+-	          simulation.netInterface()->isLocalMachineIn( machines );
++	islocal = getSimulation().netInterface()==NULL ||
++	          getSimulation().netInterface()->isLocalMachineIn( machines );
+ 	if (!islocal)
+ 	    throw new cException("Local machine `%s' is not among machines specified for this network",
+-	              simulation.netInterface()->localhost());
++	              getSimulation().netInterface()->localhost());
+ 	busLAN_mod = modtype->create( "busLAN", NULL, islocal);
+ 	check_error(); check_memory();
+ 
+diff --git a/benchspec/CPU2006/471.omnetpp/src/libs/cmdenv/cmdenv.cc b/benchspec/CPU2006/471.omnetpp/src/libs/cmdenv/cmdenv.cc
+index e8869225..6ead98a7 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/libs/cmdenv/cmdenv.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/libs/cmdenv/cmdenv.cc
+@@ -208,7 +208,7 @@ int TCmdenvApp::run()
+             printf("Setting up network `%s'...\n", (const char *)opt_network_name);
+             fflush(stdout);
+ 
+-            simulation.setupNetwork(network, run_nr());
++            getSimulation().setupNetwork(network, run_nr());
+             setupnetwork_done = true;
+ 
+             makeOptionsEffective();
+@@ -227,7 +227,7 @@ int TCmdenvApp::run()
+ 
+             printf("\nCalling finish() at end of Run #%d...\n", run_nr());
+             fflush(stdout);
+-            simulation.callFinish();
++            getSimulation().callFinish();
+         }
+         catch (cException *e)
+         {
+@@ -256,7 +256,7 @@ int TCmdenvApp::run()
+         {
+             try
+             {
+-                simulation.deleteNetwork();
++                getSimulation().deleteNetwork();
+             }
+             catch (cException *e)
+             {
+@@ -296,15 +296,15 @@ void TCmdenvApp::simulate()
+            ev.disable_tracing = false;
+            while (true)
+            {
+-               cSimpleModule *mod = simulation.selectNextModule();
++               cSimpleModule *mod = getSimulation().selectNextModule();
+                ASSERT(mod!=NULL);
+ 
+                // print event banner if neccessary
+                if (opt_eventbanners)
+                {
+                    printf( "** Event #%ld  T=%s.  (%s) %s (id=%d)\n",
+-                           simulation.eventNumber(),
+-                           simtimeToStr( simulation.simTime() ),
++                           getSimulation().eventNumber(),
++                           simtimeToStr( getSimulation().simTime() ),
+                            mod->className(),
+                            mod->fullPath(),
+                            mod->id()
+@@ -317,7 +317,7 @@ void TCmdenvApp::simulate()
+                    fflush(stdout);
+ 
+                // execute event
+-               simulation.doOneEvent( mod );
++               getSimulation().doOneEvent( mod );
+ 
+                checkTimeLimits();
+                if (sigint_received)
+@@ -330,19 +330,19 @@ void TCmdenvApp::simulate()
+            // AV 2004-05-20: Speedometer speedometer;
+            while (true)
+            {
+-               cSimpleModule *mod = simulation.selectNextModule();
++               cSimpleModule *mod = getSimulation().selectNextModule();
+                ASSERT(mod!=NULL);
+ 
+                // print event banner from time to time
+-               // ... if (simulation.eventNumber() >= last_update_ev + opt_status_frequency_ev && ...
+-               if (simulation.eventNumber()%opt_status_frequency_ev==0)
++               // ... if (getSimulation().eventNumber() >= last_update_ev + opt_status_frequency_ev && ...
++               if (getSimulation().eventNumber()%opt_status_frequency_ev==0)
+                {
+                    /* AV 2004-05-20:
+                    if (opt_perfdisplay)
+                    {
+                        printf( "** Event #%ld   T=%s    Elapsed: %s\n",
+-                               simulation.eventNumber(),
+-                               simtimeToStr(simulation.simTime()),
++                               getSimulation().eventNumber(),
++                               simtimeToStr(getSimulation().simTime()),
+                                timeToStr(totalElapsed()));
+                        printf( "     Speed:     ev/sec=%g   simsec/sec=%g   ev/simsec=%g\n",
+                                speedometer.eventsPerSec(),
+@@ -352,13 +352,13 @@ void TCmdenvApp::simulate()
+                        printf( "     Messages:  created: %ld   present: %ld   in FES: %d\n",
+                                cMessage::totalMessageCount(),
+                                cMessage::liveMessageCount(),
+-                               simulation.msgQueue.length());
++                               getSimulation().msgQueue.length());
+                    }
+                    else
+                    {
+                        printf( "** Event #%ld   T=%s   Elapsed: %s   ev/sec=%g\n",
+-                               simulation.eventNumber(),
+-                               simtimeToStr(simulation.simTime()),
++                               getSimulation().eventNumber(),
++                               simtimeToStr(getSimulation().simTime()),
+                                timeToStr(totalElapsed()),
+                                speedometer.eventsPerSec());
+                    }
+@@ -367,8 +367,8 @@ void TCmdenvApp::simulate()
+ 
+                    // AV 2004-05-20:
+                    printf( "** Event #%ld   T=%s\n",
+-                           simulation.eventNumber(),
+-                           simtimeToStr(simulation.simTime()));
++                           getSimulation().eventNumber(),
++                           simtimeToStr(getSimulation().simTime()));
+ 
+ #if defined(SPEC_CPU)
+                    printf( "     Messages:  created: %ld\n",
+@@ -377,7 +377,7 @@ void TCmdenvApp::simulate()
+                    printf( "     Messages:  created: %ld   present: %ld   in FES: %d\n",
+                            cMessage::totalMessageCount(),
+                            cMessage::liveMessageCount(),
+-                           simulation.msgQueue.length());
++                           getSimulation().msgQueue.length());
+ #endif
+ 
+                    if (opt_autoflush)
+@@ -385,9 +385,9 @@ void TCmdenvApp::simulate()
+                }
+ 
+                // execute event
+-               simulation.doOneEvent( mod );
++               getSimulation().doOneEvent( mod );
+ 
+-               // AV 2004-05-20: speedometer.addEvent(simulation.simTime());
++               // AV 2004-05-20: speedometer.addEvent(getSimulation().simTime());
+                checkTimeLimits();
+                if (sigint_received)
+                    throw new cTerminationException("SIGINT or SIGTERM received, exiting");
+@@ -453,19 +453,19 @@ void TCmdenvApp::help()
+     ev << "\n";
+ 
+     ev << "Available networks:\n";
+-    cIterator iter(networks);
++    cIterator iter(getNetworks());
+     for (; iter(); iter++)
+         ev << "  " << ((cNetworkType *)iter())->name() << '\n';
+     ev << "\n";
+ 
+     ev << "Available modules:\n";
+-    cIterator iter2(modtypes);
++    cIterator iter2(getModuleTypes());
+     for (; iter2(); iter2++)
+         ev << "  " << ((cModuleType *)iter2())->name() << '\n';
+     ev << "\n";
+ 
+     ev << "Available channels:\n";
+-    cIterator iter3(linktypes);
++    cIterator iter3(getLinkTypes());
+     for (; iter3(); iter3++)
+         ev << "  " << ((cLinkType *)iter3())->name() << '\n';
+     ev << "\n";
+@@ -473,7 +473,7 @@ void TCmdenvApp::help()
+ 
+ void TCmdenvApp::puts(const char *s)
+ {
+-    if (opt_modulemsgs || simulation.contextModule()==NULL)
++    if (opt_modulemsgs || getSimulation().contextModule()==NULL)
+     {
+         TOmnetApp::puts( s );
+         if (opt_autoflush)
+diff --git a/benchspec/CPU2006/471.omnetpp/src/libs/envir/akoutvectormgr.cc b/benchspec/CPU2006/471.omnetpp/src/libs/envir/akoutvectormgr.cc
+index 1d5ccd40..41a85427 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/libs/envir/akoutvectormgr.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/libs/envir/akoutvectormgr.cc
+@@ -53,7 +53,7 @@ void *cAkOutputVectorManager::registerVector(const char *modulename, const char
+     // see if this vector needs Akaroa control
+     // section stands for RUN[]
+     char section[16];
+-    sprintf(section,"Run %d", simulation.runNumber() );
++    sprintf(section,"Run %d", getSimulation().runNumber() );
+ 
+     opp_string inientry;
+     inientry.allocate(opp_strlen(modulename)+1+opp_strlen(vectorname)+sizeof(".akaroa")+1);
+diff --git a/benchspec/CPU2006/471.omnetpp/src/libs/envir/filemgrs.cc b/benchspec/CPU2006/471.omnetpp/src/libs/envir/filemgrs.cc
+index 0753d470..ec4b876c 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/libs/envir/filemgrs.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/libs/envir/filemgrs.cc
+@@ -120,7 +120,7 @@ void cFileOutputVectorManager::startRun()
+ {
+     // clean up file from previous runs
+     closeFile();
+-    createFileName(fname, ev.app->getIniFile(), simulation.runNumber(), "output-vector-file", "omnetpp.vec");
++    createFileName(fname, ev.app->getIniFile(), getSimulation().runNumber(), "output-vector-file", "omnetpp.vec");
+     remove(fname);
+ }
+ 
+@@ -138,7 +138,7 @@ void *cFileOutputVectorManager::registerVector(const char *modulename, const cha
+     vp->modulename = modulename;
+     vp->vectorname = vectorname;
+ 
+-    ev.app->getOutVectorConfig(simulation.runNumber(), modulename, vectorname,
++    ev.app->getOutVectorConfig(getSimulation().runNumber(), modulename, vectorname,
+                                vp->enabled, vp->starttime, vp->stoptime);
+     return vp;
+ }
+@@ -242,7 +242,7 @@ void cFileOutputScalarManager::startRun()
+ {
+     // clean up file from previous runs
+     closeFile();
+-    createFileName(fname, ev.app->getIniFile(), simulation.runNumber(), "output-scalar-file", "omnetpp.sca");
++    createFileName(fname, ev.app->getIniFile(), getSimulation().runNumber(), "output-scalar-file", "omnetpp.sca");
+     initialized = false;
+ }
+ 
+@@ -262,7 +262,7 @@ void cFileOutputScalarManager::init()
+     if (!initialized)
+     {
+         initialized = true;
+-        fprintf(f,"run %d \"%s\"\n", simulation.runNumber(), simulation.networkType()->name());
++        fprintf(f,"run %d \"%s\"\n", getSimulation().runNumber(), getSimulation().networkType()->name());
+     }
+ }
+ 
+@@ -317,7 +317,7 @@ cFileSnapshotManager::~cFileSnapshotManager()
+ void cFileSnapshotManager::startRun()
+ {
+     // clean up file from previous runs
+-    createFileName(fname, ev.app->getIniFile(), simulation.runNumber(), "snapshot-file", "omnetpp.sna");
++    createFileName(fname, ev.app->getIniFile(), getSimulation().runNumber(), "snapshot-file", "omnetpp.sna");
+     remove(fname);
+ }
+ 
+diff --git a/benchspec/CPU2006/471.omnetpp/src/libs/envir/omnetapp.cc b/benchspec/CPU2006/471.omnetpp/src/libs/envir/omnetapp.cc
+index fd41bb82..d52059d8 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/libs/envir/omnetapp.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/libs/envir/omnetapp.cc
+@@ -95,7 +95,7 @@ void TOmnetApp::setup()
+             opt_total_stack_kb = MAIN_STACK_KB+4;
+          }
+          cCoroutine::init( 1024*opt_total_stack_kb, 1024*MAIN_STACK_KB );
+-         simulation.init();
++         getSimulation().init();
+ 
+          // install output vector manager
+          cOutputVectorManager *ovm = (cOutputVectorManager *)createOne(opt_outputvectormanager_class);
+@@ -142,7 +142,7 @@ void TOmnetApp::setup()
+              {
+                  throw new cException("Network interface did not initialize properly: %s", e->message());
+              }
+-             simulation.setNetInterface( netmod );
++             getSimulation().setNetInterface( netmod );
+          }
+      }
+      catch (cException *e)
+@@ -157,7 +157,7 @@ void TOmnetApp::shutdown()
+ {
+     try
+     {
+-        simulation.deleteNetwork();
++        getSimulation().deleteNetwork();
+     }
+     catch (cException *e)
+     {
+@@ -172,12 +172,12 @@ void TOmnetApp::startRun()
+     outvectmgr->startRun();
+     outscalarmgr->startRun();
+     snapshotmgr->startRun();
+-    simulation.startRun();
++    getSimulation().startRun();
+ }
+ 
+ void TOmnetApp::endRun()
+ {
+-    simulation.endRun();
++    getSimulation().endRun();
+     snapshotmgr->endRun();
+     outscalarmgr->endRun();
+     outvectmgr->endRun();
+@@ -343,7 +343,7 @@ void TOmnetApp::readPerRunOptions(int run_nr)
+ void TOmnetApp::makeOptionsEffective()
+ {
+      cModule::pause_in_sendmsg = opt_pause_in_sendmsg;
+-     simulation.setNetIfCheckFreq( opt_netifcheckfreq );
++     getSimulation().setNetIfCheckFreq( opt_netifcheckfreq );
+ 
+      for(int i=0;i<NUM_RANDOM_GENERATORS;i++)
+          genk_randseed( i, opt_genk_randomseed[i] );
+@@ -514,7 +514,7 @@ void TOmnetApp::stopClock()
+ {
+     simendtime = time(0);
+     elapsedtime +=  simendtime - laststarted;
+-    simulatedtime = simulation.simTime();
++    simulatedtime = getSimulation().simTime();
+ }
+ 
+ time_t TOmnetApp::totalElapsed()
+@@ -525,7 +525,7 @@ time_t TOmnetApp::totalElapsed()
+ 
+ void TOmnetApp::checkTimeLimits()
+ {
+-    if (opt_simtimelimit!=0 && simulation.simTime()>=opt_simtimelimit)
++    if (opt_simtimelimit!=0 && getSimulation().simTime()>=opt_simtimelimit)
+          throw new cTerminationException(eSIMTIME);
+     else if (opt_cputimelimit!=0 && elapsedtime+time(0)-laststarted>=opt_cputimelimit)
+          throw new cTerminationException(eREALTIME);
+diff --git a/benchspec/CPU2006/471.omnetpp/src/libs/envir/slaveapp.cc b/benchspec/CPU2006/471.omnetpp/src/libs/envir/slaveapp.cc
+index 0b278ed9..301514de 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/libs/envir/slaveapp.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/libs/envir/slaveapp.cc
+@@ -63,7 +63,7 @@ int TSlaveApp::run()
+      // FIXME setupSignals();
+ 
+      // execute a simulation run, then exit
+-     int run_nr = simulation.netInterface()->receive_runnumber();
++     int run_nr = getSimulation().netInterface()->receive_runnumber();
+ 
+      bool had_error = false;
+ 
+@@ -82,7 +82,7 @@ int TSlaveApp::run()
+ 
+          // set up network
+          ev.printf("Setting up network `%s'...\n", (const char *)opt_network_name);
+-         simulation.setupNetwork(network, run_nr);
++         getSimulation().setupNetwork(network, run_nr);
+          setupnetwork_done = true;
+ 
+          makeOptionsEffective();
+@@ -92,13 +92,13 @@ int TSlaveApp::run()
+          startrun_done = true;
+ 
+          // run the simulation
+-         //ev.printf("Running simulation...\n");
++         //ev.printf("Running getSimulation()...\n");
+ 
+          // simulate() should only throw exception if error occurred and
+          // finish() should not be called. sigint_received is treated differently
+          simulate();
+ 
+-         simulation.callFinish();
++         getSimulation().callFinish();
+      }
+      catch (cException *e)
+      {
+@@ -112,7 +112,7 @@ int TSlaveApp::run()
+      {
+          try
+          {
+-             simulation.endRun();
++             getSimulation().endRun();
+          }
+          catch (cException *e)
+          {
+@@ -127,7 +127,7 @@ int TSlaveApp::run()
+      {
+          try
+          {
+-             simulation.deleteNetwork();
++             getSimulation().deleteNetwork();
+          }
+          catch (cException *e)
+          {
+@@ -151,10 +151,10 @@ void TSlaveApp::simulate()
+         ev.disable_tracing = true;
+         while (true)
+         {
+-            cSimpleModule *mod = simulation.selectNextModule();
++            cSimpleModule *mod = getSimulation().selectNextModule();
+             ASSERT(mod!=NULL);
+ 
+-            simulation.doOneEvent( mod );
++            getSimulation().doOneEvent( mod );
+             checkTimeLimits();
+         }
+     }
+@@ -200,13 +200,13 @@ void TSlaveApp::putmsg(const char *str)
+         fclose(f);
+      }
+ 
+-     if (opt_errmsgs2cons && simulation.netInterface())
+-         simulation.netInterface()->putmsg_onconsole( str );
++     if (opt_errmsgs2cons && getSimulation().netInterface())
++         getSimulation().netInterface()->putmsg_onconsole( str );
+ }
+ 
+ void TSlaveApp::puts(const char *str)
+ {
+-     int is_modmsg = simulation.contextModule()!=NULL;
++     int is_modmsg = getSimulation().contextModule()!=NULL;
+      if (is_modmsg && !opt_module_msgs)
+         return;
+ 
+@@ -217,8 +217,8 @@ void TSlaveApp::puts(const char *str)
+         fclose(f);
+      }
+ 
+-     if (simulation.netInterface() && (is_modmsg?opt_modmsgs2cons:opt_infomsgs2cons))
+-         simulation.netInterface()->puts_onconsole( str );
++     if (getSimulation().netInterface() && (is_modmsg?opt_modmsgs2cons:opt_infomsgs2cons))
++         getSimulation().netInterface()->puts_onconsole( str );
+ }
+ 
+ bool TSlaveApp::gets(const char *promptstr, char *buf, int len)
+@@ -230,8 +230,8 @@ bool TSlaveApp::gets(const char *promptstr, char *buf, int len)
+         fclose(f);
+      }
+ 
+-     if (simulation.netInterface())
+-        return simulation.netInterface()->gets_onconsole(promptstr,buf,len);
++     if (getSimulation().netInterface())
++        return getSimulation().netInterface()->gets_onconsole(promptstr,buf,len);
+      else
+         return false;
+ }
+@@ -245,8 +245,8 @@ int TSlaveApp::askYesNo(const char *question)
+         fclose(f);
+      }
+ 
+-     if (simulation.netInterface())
+-        return simulation.netInterface()->askyesno_onconsole( question );
++     if (getSimulation().netInterface())
++        return getSimulation().netInterface()->askyesno_onconsole( question );
+      else
+         return 0;
+ }
+diff --git a/benchspec/CPU2006/471.omnetpp/src/libs/sim/cchannel.cc b/benchspec/CPU2006/471.omnetpp/src/libs/sim/cchannel.cc
+index 1dff8d74..ee7a437a 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/libs/sim/cchannel.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/libs/sim/cchannel.cc
+@@ -322,7 +322,7 @@ cPar& cSimpleChannel::addPar(cPar *p)
+ 
+ bool cSimpleChannel::isBusy() const
+ {
+-    return simulation.simTime()<transm_finishes;
++    return getSimulation().simTime()<transm_finishes;
+ }
+ 
+ void cSimpleChannel::deliver(cMessage *msg, simtime_t t)
+diff --git a/benchspec/CPU2006/471.omnetpp/src/libs/sim/cdetect.cc b/benchspec/CPU2006/471.omnetpp/src/libs/sim/cdetect.cc
+index 39f25766..f86638e6 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/libs/sim/cdetect.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/libs/sim/cdetect.cc
+@@ -135,7 +135,7 @@ void cTDExpandingWindows::collect(double val)
+   {
+      int maxsize = minwinds + (int)(minwinds*windexp + 0.5);
+      xy* pair = new xy;         //create new element
+-     pair->x = simulation.simTime();
++     pair->x = getSimulation().simTime();
+      pair->y = val;
+      pair->next = NULL;
+      if (size == 0)
+diff --git a/benchspec/CPU2006/471.omnetpp/src/libs/sim/cenum.cc b/benchspec/CPU2006/471.omnetpp/src/libs/sim/cenum.cc
+index 21c7d97f..6d25b0ad 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/libs/sim/cenum.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/libs/sim/cenum.cc
+@@ -177,7 +177,7 @@ sEnumBuilder::sEnumBuilder(const char *name, ...)
+     if (!e)
+     {
+ 	e = new cEnum(name);
+-        e->setOwner(&enums);
++        e->setOwner(&getEnums());
+     }
+ 
+     va_list va;
+diff --git a/benchspec/CPU2006/471.omnetpp/src/libs/sim/cexception.cc b/benchspec/CPU2006/471.omnetpp/src/libs/sim/cexception.cc
+index df4a82b9..eff42ca4 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/libs/sim/cexception.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/libs/sim/cexception.cc
+@@ -100,14 +100,14 @@ cException::cException(const cObject *where, const char *msgformat...)
+ 
+ void cException::storeCtx()
+ {
+-    if (!simulation.contextModule())
++    if (!getSimulation().contextModule())
+     {
+         moduleid = -1;
+     }
+     else
+     {
+-        moduleid = simulation.contextModule()->id();
+-        modulefullpath = simulation.contextModule()->fullPath();
++        moduleid = getSimulation().contextModule()->id();
++        modulefullpath = getSimulation().contextModule()->fullPath();
+     }
+ }
+ 
+@@ -121,10 +121,10 @@ void cException::init(const cObject *where, int errc, const char *fmt, va_list v
+     //  - if object is local in module: use fullName()
+     //  - if object is somewhere else: use fullPath()
+     buffer[0]='\0';
+-    if (where && where!=simulation.contextModule())
++    if (where && where!=getSimulation().contextModule())
+     {
+         // try: if module's fullpath is same as module fullpath + object fullname, no need to print path
+-        sprintf(buffer2,"%s.%s",(simulation.contextModule()?simulation.contextModule()->fullPath():""), where->fullName());
++        sprintf(buffer2,"%s.%s",(getSimulation().contextModule()?getSimulation().contextModule()->fullPath():""), where->fullName());
+         bool needpath = strcmp(buffer2,where->fullPath())!=0;
+         sprintf(buffer, "(%s)%s: ", where->className(), needpath ? where->fullPath() : where->fullName());
+     }
+diff --git a/benchspec/CPU2006/471.omnetpp/src/libs/sim/cgate.cc b/benchspec/CPU2006/471.omnetpp/src/libs/sim/cgate.cc
+index 361364ac..024021ea 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/libs/sim/cgate.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/libs/sim/cgate.cc
+@@ -427,7 +427,7 @@ const char *cGate::displayString() const
+     {
+         sprintf(dispname, "%s.%s",ownerModule()->className(),fullName());
+     }
+-    const char *s = ev.getDisplayString(simulation.runNumber(),dispname);
++    const char *s = ev.getDisplayString(getSimulation().runNumber(),dispname);
+     return s ? s : "";
+ }
+ 
+diff --git a/benchspec/CPU2006/471.omnetpp/src/libs/sim/chead.cc b/benchspec/CPU2006/471.omnetpp/src/libs/sim/chead.cc
+index 65eb092f..3b2efff5 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/libs/sim/chead.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/libs/sim/chead.cc
+@@ -27,16 +27,6 @@
+ #include "chead.h"
+ 
+ //==========================================================================
+-//=== Global objects:
+-
+-cHead networks("networks");
+-cHead modinterfaces("module-interfaces");
+-cHead modtypes("module-types");
+-cHead linktypes("link-types");
+-cHead functions("functions");
+-cHead classes("classes");
+-cHead enums("enums");
+-
+ //=== Registration
+ Register_Class(cHead);
+ 
+@@ -73,7 +63,7 @@ int cHead::count() const
+ 
+ cFunctionType *findFunction(const char *s,int argcount)
+ {
+-    for (cIterator i(functions); !i.end(); i++)
++    for (cIterator i(getFunctions()); !i.end(); i++)
+     {
+         cFunctionType *f = (cFunctionType *) i();
+         if (f->isName(s) && f->argCount()==argcount)
+diff --git a/benchspec/CPU2006/471.omnetpp/src/libs/sim/cmessage.cc b/benchspec/CPU2006/471.omnetpp/src/libs/sim/cmessage.cc
+index 67be1b8e..810f322a 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/libs/sim/cmessage.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/libs/sim/cmessage.cc
+@@ -59,7 +59,7 @@ cMessage::cMessage(const char *name, int k, long ln, int pri, bool err) : cObjec
+     contextptr = NULL;
+     frommod=fromgate=-1;
+     tomod=togate=-1;
+-    created=simulation.simTime();
++    created=getSimulation().simTime();
+     sent=delivd=tstamp=0;
+     heapindex=-1;
+ 
+@@ -91,7 +91,7 @@ void cMessage::info(char *buf)
+     }
+     else if (kind()==MK_STARTER)
+     {
+-        cModule *tomodp = simulation.module(tomod);
++        cModule *tomodp = getSimulation().module(tomod);
+         sprintf(b,"T=%s starter for %s (id=%d) ",
+                 simtimeToStr(delivd),
+                 tomodp ? tomodp->fullPath() : deletedstr,
+@@ -99,7 +99,7 @@ void cMessage::info(char *buf)
+     }
+     else if (kind()==MK_TIMEOUT)
+     {
+-        cModule *tomodp = simulation.module(tomod);
++        cModule *tomodp = getSimulation().module(tomod);
+         sprintf(b,"T=%s timeout for %s (id=%d) ",
+                 simtimeToStr(delivd),
+                 tomodp ? tomodp->fullPath() : deletedstr,
+@@ -107,7 +107,7 @@ void cMessage::info(char *buf)
+     }
+     else if (frommod==tomod)
+     {
+-        cModule *tomodp = simulation.module(tomod);
++        cModule *tomodp = getSimulation().module(tomod);
+         sprintf(b,"T=%s selfmsg for %s (id=%d) ",
+                 simtimeToStr(delivd),
+                 tomodp ? tomodp->fullPath() : deletedstr,
+@@ -116,8 +116,8 @@ void cMessage::info(char *buf)
+     else
+     {
+         // 2 sprintfs cannot be merged because of static buffer in fullPath()
+-        cModule *frommodp = simulation.module(frommod);
+-        cModule *tomodp = simulation.module(tomod);
++        cModule *frommodp = getSimulation().module(frommod);
++        cModule *tomodp = getSimulation().module(tomod);
+         sprintf(b,"T=%s src=%s (id=%d), ",
+                 simtimeToStr(delivd),
+                 frommodp ? frommodp->fullPath() : deletedstr,
+@@ -228,7 +228,7 @@ void cMessage::encapsulate(cMessage *msg)
+ 
+     if (msg)
+     {
+-        if (msg->owner()!=&(simulation.contextSimpleModule()->locals))
++        if (msg->owner()!=&(getSimulation().contextSimpleModule()->locals))
+             throw new cException(this,"encapsulate(): not owner of message");
+         take( encapmsg = msg );
+         len += encapmsg->len;
+@@ -280,7 +280,7 @@ int cMessage::findPar(const char *s) const
+ cGate *cMessage::senderGate() const
+ {
+     if (frommod<0 || fromgate<0)  return NULL;
+-    cModule *mod = simulation.module( frommod );
++    cModule *mod = getSimulation().module( frommod );
+     if (!mod) return NULL;
+     return mod->gate( fromgate );
+ }
+@@ -288,14 +288,14 @@ cGate *cMessage::senderGate() const
+ cGate *cMessage::arrivalGate() const
+ {
+     if (tomod<0 || togate<0)  return NULL;
+-    cModule *mod = simulation.module( tomod );
++    cModule *mod = getSimulation().module( tomod );
+     if (!mod) return NULL;
+     return mod->gate( togate );
+ }
+ 
+ bool cMessage::arrivedOn(const char *s, int g)
+ {
+-    return togate==simulation.contextModule()->findGate(s,g);
++    return togate==getSimulation().contextModule()->findGate(s,g);
+ }
+ 
+ const char *cMessage::displayString() const
+diff --git a/benchspec/CPU2006/471.omnetpp/src/libs/sim/cmodule.cc b/benchspec/CPU2006/471.omnetpp/src/libs/sim/cmodule.cc
+index 1a9551f1..f5c68872 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/libs/sim/cmodule.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/libs/sim/cmodule.cc
+@@ -415,14 +415,14 @@ const char *cModule::machinePar(const char *pname)
+ 
+ bool cModule::isOnLocalMachine() const
+ {
+-    return simulation.netInterface()==NULL || simulation.netInterface()->isLocalMachineIn( machinev );
++    return getSimulation().netInterface()==NULL || getSimulation().netInterface()->isLocalMachineIn( machinev );
+ }
+ 
+ int cModule::buildInside()
+ {
+     // temporarily switch context
+-    cModule *oldcontext = simulation.contextModule();
+-    simulation.setContextModule(this);
++    cModule *oldcontext = getSimulation().contextModule();
++    getSimulation().setContextModule(this);
+ 
+     // check parameters and gates
+     cModuleInterface *iface = moduleType()->moduleInterface();
+@@ -432,9 +432,9 @@ int cModule::buildInside()
+     doBuildInside();
+ 
+     if (oldcontext)
+-        simulation.setContextModule( oldcontext );
++        getSimulation().setContextModule( oldcontext );
+     else
+-        simulation.setGlobalContext();
++        getSimulation().setGlobalContext();
+ 
+     return 0;
+ }
+@@ -467,7 +467,7 @@ const char *cModule::displayString()
+     char dispname[128];
+     if (!parentModule()) return "";
+     sprintf(dispname, "%s.%s",parentModule()->className(),fullName());
+-    const char *s = ev.getDisplayString(simulation.runNumber(),dispname);
++    const char *s = ev.getDisplayString(getSimulation().runNumber(),dispname);
+     return s ? s : "";
+ }
+ 
+@@ -486,7 +486,7 @@ const char *cModule::displayStringAsParent()
+         return parentdispstr;
+ 
+     // no display string stored -- try to get it from Envir
+-    const char *s = ev.getDisplayString(simulation.runNumber(),className());
++    const char *s = ev.getDisplayString(getSimulation().runNumber(),className());
+     return s ? s : "";
+ }
+ 
+@@ -540,7 +540,7 @@ const char *cModule::displayString(int type)
+     {
+         sprintf(dispname, "%s",className());
+     }
+-    const char *s = ev.getDisplayString(simulation.runNumber(),dispname);
++    const char *s = ev.getDisplayString(getSimulation().runNumber(),dispname);
+     return s ? s : "";
+ }
+ 
+@@ -559,13 +559,13 @@ void cSimpleModule::activate(void *p)
+ 
+     // The starter message should be the same as the timeoutmsg member of
+     // cSimpleModule. If not, then something is wrong...
+-    cMessage *starter = simulation.msgQueue.getFirst();
++    cMessage *starter = getSimulation().msgQueue.getFirst();
+     if (starter!=smod->timeoutmsg)
+     {
+         // hand exception to cSimulation::transferTo() and switch back
+-        simulation.exception = new cException("scheduleStart() should have been called for dynamically created module `%s'", smod->fullPath());
+-        simulation.exception_type = 0;
+-        simulation.transferToMain();
++        getSimulation().exception = new cException("scheduleStart() should have been called for dynamically created module `%s'", smod->fullPath());
++        getSimulation().exception_type = 0;
++        getSimulation().transferToMain();
+     }
+ 
+     // give back the message to the module
+@@ -586,22 +586,22 @@ void cSimpleModule::activate(void *p)
+     catch (cEndModuleException *e)
+     {
+         // hand exception to cSimulation::transferTo() and switch back
+-        simulation.exception = e;
+-        simulation.exception_type = 2;
++        getSimulation().exception = e;
++        getSimulation().exception_type = 2;
+     }
+     catch (cTerminationException *e)
+     {
+         // hand exception to cSimulation::transferTo() and switch back
+-        simulation.exception = e;
+-        simulation.exception_type = 1;
++        getSimulation().exception = e;
++        getSimulation().exception_type = 1;
+     }
+     catch (cException *e)
+     {
+         // hand exception to cSimulation::transferTo() and switch back
+-        simulation.exception = e;
+-        simulation.exception_type = 0;
++        getSimulation().exception = e;
++        getSimulation().exception_type = 0;
+     }
+-    simulation.transferToMain();
++    getSimulation().transferToMain();
+ }
+ 
+ cSimpleModule::cSimpleModule(const cSimpleModule& mod) :
+@@ -725,7 +725,7 @@ void cSimpleModule::error(const char *fmt...) const
+ 
+ void cSimpleModule::discardLocals()
+ {
+-    // Called when cleaning up a simple module after simulation. Its job is
++    // Called when cleaning up a simple module after getSimulation(). Its job is
+     // to delete objects (now garbage) owned by the simple module, and destruct
+     // (via calling dtor) objects left on the coroutine stack.
+     //
+@@ -816,7 +816,7 @@ void cSimpleModule::scheduleStart(simtime_t t)
+     timeoutmsg->setArrival(this,-1, t);
+ 
+     // use timeoutmsg as the activation message; insert it into the FES
+-    simulation.msgQueue.insert( timeoutmsg );
++    getSimulation().msgQueue.insert( timeoutmsg );
+ }
+ 
+ void cSimpleModule::deleteModule()
+@@ -825,11 +825,11 @@ void cSimpleModule::deleteModule()
+     // simple module (ie. that this!=contextModule())!
+ 
+     // delete pending messages for this module
+-    for (cMessageHeapIterator iter(simulation.msgQueue); !iter.end(); iter++)
++    for (cMessageHeapIterator iter(getSimulation().msgQueue); !iter.end(); iter++)
+     {
+         cMessage *msg = iter();
+         if (msg->arrivalModuleId() == id())
+-            delete simulation.msgQueue.get( msg );
++            delete getSimulation().msgQueue.get( msg );
+     }
+ 
+     // adjust gates that were directed here
+@@ -842,15 +842,15 @@ void cSimpleModule::deleteModule()
+             g->fromGate()->setTo( NULL );
+     }
+ 
+-    if (simulation.contextModule()!=this)
++    if (getSimulation().contextModule()!=this)
+     {
+         // we're being deleted from another module: just finish job and return
+-        simulation.deleteModule( id() );
++        getSimulation().deleteModule( id() );
+     }
+     else
+     {
+         // we're inside the currently executing module: get outta here quickly,
+-        // and leave simulation.deleteModule(id()) to whoever catches the exception
++        // and leave getSimulation().deleteModule(id()) to whoever catches the exception
+         throw new cEndModuleException(true);
+     }
+ }
+@@ -905,9 +905,9 @@ int cSimpleModule::sendDelayed(cMessage *msg, double delay, cGate *outgate)
+     // when in debugging mode, switch back to main program for a moment
+     if (pause_in_sendmsg && usesactivity)
+     {
+-        simulation.backtomod = this;  // Ensure that scheduler will select us
+-        simulation.transferToMain();  // before all other modules
+-        simulation.backtomod = NULL;
++        getSimulation().backtomod = this;  // Ensure that scheduler will select us
++        getSimulation().transferToMain();  // before all other modules
++        getSimulation().backtomod = NULL;
+     }
+ 
+     // set message parameters and send it
+@@ -955,9 +955,9 @@ int cSimpleModule::sendDirect(cMessage *msg, double propdelay, cGate *togate)
+     // to help debugging, switch back to main for a moment
+     if (pause_in_sendmsg && usesactivity)
+     {
+-        simulation.backtomod = this;  // Ensure that scheduler will select us
+-        simulation.transferToMain();  // before all other modules
+-        simulation.backtomod = NULL;
++        getSimulation().backtomod = this;  // Ensure that scheduler will select us
++        getSimulation().transferToMain();  // before all other modules
++        getSimulation().backtomod = NULL;
+     }
+ 
+     // set message parameters and send it
+@@ -979,16 +979,16 @@ int cSimpleModule::scheduleAt(simtime_t t, cMessage *msg)
+     // to help debugging, switch back to main for a moment
+     if (pause_in_sendmsg && usesactivity)
+     {
+-        simulation.backtomod = this;  // Ensure that scheduler will
+-        simulation.transferToMain();  //   select us before all other modules
+-        simulation.backtomod = NULL;
++        getSimulation().backtomod = this;  // Ensure that scheduler will
++        getSimulation().transferToMain();  //   select us before all other modules
++        getSimulation().backtomod = NULL;
+     }
+ 
+     // set message parameters and schedule it
+     msg->setSentFrom(this, -1, simTime());
+     msg->setArrival(this, -1, t);
+     ev.messageSent( msg );
+-    simulation.msgQueue.insert( msg );
++    getSimulation().msgQueue.insert( msg );
+     return 0;
+ }
+ 
+@@ -1007,7 +1007,7 @@ cMessage *cSimpleModule::cancelEvent(cMessage *msg)
+     }
+ 
+     // now remove it from future events and return pointer
+-    simulation.msgQueue.get( msg );
++    getSimulation().msgQueue.get( msg );
+     return msg;
+ }
+ 
+@@ -1022,8 +1022,8 @@ void cSimpleModule::syncpoint(simtime_t t, int g)
+ 
+     // if dest is not the network interface mod, ignore this call
+     // otherwise, send syncpoint to destination segment
+-    if (destgate->ownerModule()==simulation.netInterface())
+-        simulation.netInterface()->send_syncpoint(t, destgate->id());
++    if (destgate->ownerModule()==getSimulation().netInterface())
++        getSimulation().netInterface()->send_syncpoint(t, destgate->id());
+ }
+ 
+ void cSimpleModule::syncpoint(simtime_t t, const char *gatename, int sn)
+@@ -1046,8 +1046,8 @@ void cSimpleModule::cancelSyncpoint(simtime_t t, int g)
+ 
+     // if dest is not the network interface mod, ignore this call
+     // otherwise, send syncpoint to destination segment
+-    if (destgate->ownerModule()==simulation.netInterface())
+-        simulation.netInterface()->send_cancelsyncpoint(t, destgate->id());
++    if (destgate->ownerModule()==getSimulation().netInterface())
++        getSimulation().netInterface()->send_cancelsyncpoint(t, destgate->id());
+ }
+ 
+ void cSimpleModule::cancelSyncpoint(simtime_t t, const char *gatename, int sn)
+@@ -1064,7 +1064,7 @@ void cSimpleModule::arrived( cMessage *msg, int ongate, simtime_t t)
+     if (state==sENDED)
+         throw new cException(eMODFIN,fullPath());
+     msg->setArrival(this, ongate, t);
+-    simulation.msgQueue.insert( msg );
++    getSimulation().msgQueue.insert( msg );
+ }
+ 
+ void cSimpleModule::wait(simtime_t t)
+@@ -1075,12 +1075,12 @@ void cSimpleModule::wait(simtime_t t)
+         throw new cException(eNEGTIME);
+ 
+     timeoutmsg->setArrivalTime(simTime()+t);
+-    simulation.msgQueue.insert( timeoutmsg );
++    getSimulation().msgQueue.insert( timeoutmsg );
+ 
+     for(;;)
+     {
+-        simulation.transferToMain();
+-        cMessage *newmsg = simulation.msgQueue.getFirst();
++        getSimulation().transferToMain();
++        cMessage *newmsg = getSimulation().msgQueue.getFirst();
+ 
+         if (newmsg==timeoutmsg)
+             break;
+@@ -1103,12 +1103,12 @@ void cSimpleModule::waitAndEnqueue(simtime_t t, cQueue *queue)
+         throw new cException("waitAndEnqueue(): queue pointer is NULL");
+ 
+     timeoutmsg->setArrivalTime(simTime()+t);
+-    simulation.msgQueue.insert( timeoutmsg );
++    getSimulation().msgQueue.insert( timeoutmsg );
+ 
+     for(;;)
+     {
+-        simulation.transferToMain();
+-        cMessage *newmsg = simulation.msgQueue.getFirst();
++        getSimulation().transferToMain();
++        cMessage *newmsg = getSimulation().msgQueue.getFirst();
+ 
+         if (newmsg==timeoutmsg)
+             break;
+@@ -1125,7 +1125,7 @@ void cSimpleModule::waitAndEnqueue(simtime_t t, cQueue *queue)
+ 
+ bool cSimpleModule::isThereMessage() const
+ {
+-    cMessage *msg = simulation.msgQueue.peekFirst();
++    cMessage *msg = getSimulation().msgQueue.peekFirst();
+     return msg!=NULL &&
+            msg->arrivalModuleId()==id() &&
+            msg->arrivalTime()==simTime();
+@@ -1136,8 +1136,8 @@ cMessage *cSimpleModule::receiveNew()
+     if (!usesactivity)
+         throw new cException(eNORECV);
+ 
+-    simulation.transferToMain();
+-    cMessage *newmsg = simulation.msgQueue.getFirst();
++    getSimulation().transferToMain();
++    cMessage *newmsg = getSimulation().msgQueue.getFirst();
+ 
+     ev.messageDelivered( newmsg );
+ 
+@@ -1152,10 +1152,10 @@ cMessage *cSimpleModule::receiveNew(simtime_t t)
+         throw new cException(eNEGTOUT);
+ 
+     timeoutmsg->setArrivalTime(simTime()+t);
+-    simulation.msgQueue.insert( timeoutmsg );
++    getSimulation().msgQueue.insert( timeoutmsg );
+ 
+-    simulation.transferToMain();
+-    cMessage *newmsg = simulation.msgQueue.getFirst();
++    getSimulation().transferToMain();
++    cMessage *newmsg = getSimulation().msgQueue.getFirst();
+ 
+     if (newmsg==timeoutmsg)  // timeout expired
+     {
+@@ -1185,11 +1185,11 @@ cMessage *cSimpleModule::receiveNewOn(int g, simtime_t t)
+     if (t!=MAXTIME)
+     {
+         timeoutmsg->setArrivalTime(simTime()+t);
+-        simulation.msgQueue.insert( timeoutmsg );
++        getSimulation().msgQueue.insert( timeoutmsg );
+         for(;;)
+         {
+-            simulation.transferToMain();
+-            cMessage *newmsg = simulation.msgQueue.getFirst();
++            getSimulation().transferToMain();
++            cMessage *newmsg = getSimulation().msgQueue.getFirst();
+             if (newmsg==timeoutmsg)  // timeout expired
+                {take(timeoutmsg); return NULL;}
+             else
+@@ -1206,8 +1206,8 @@ cMessage *cSimpleModule::receiveNewOn(int g, simtime_t t)
+     {
+         for(;;)
+         {
+-            simulation.transferToMain();
+-            cMessage *newmsg = simulation.msgQueue.getFirst();
++            getSimulation().transferToMain();
++            cMessage *newmsg = getSimulation().msgQueue.getFirst();
+             ev.messageDelivered( newmsg );
+             if (newmsg->arrivedOn(g))
+                 return newmsg;
+@@ -1291,15 +1291,15 @@ bool cSimpleModule::callInitialize(int stage)
+     if (stage < numStages)
+     {
+         // switch to the module's context for the duration of the initialize() call.
+-        cModule *oldcontext = simulation.contextModule();
+-        simulation.setContextModule( this );
++        cModule *oldcontext = getSimulation().contextModule();
++        getSimulation().setContextModule( this );
+ 
+         initialize( stage );
+ 
+         if (oldcontext)
+-            simulation.setContextModule( oldcontext );
++            getSimulation().setContextModule( oldcontext );
+         else
+-            simulation.setGlobalContext();
++            getSimulation().setGlobalContext();
+     }
+     return stage < numStages-1;  // return true if there's more stages to do
+ }
+@@ -1309,15 +1309,15 @@ void cSimpleModule::callFinish()
+     // This is the interface for calling finish().
+     // We switch to the module's context for the duration of the call.
+ 
+-    cModule *oldcontext = simulation.contextModule();
+-    simulation.setContextModule( this );
++    cModule *oldcontext = getSimulation().contextModule();
++    getSimulation().setContextModule( this );
+ 
+     finish();
+ 
+     if (oldcontext)
+-        simulation.setContextModule( oldcontext );
++        getSimulation().setContextModule( oldcontext );
+     else
+-        simulation.setGlobalContext();
++        getSimulation().setGlobalContext();
+ }
+ 
+ void cSimpleModule::pause(const char *phase)
+@@ -1327,30 +1327,30 @@ void cSimpleModule::pause(const char *phase)
+ 
+     if (phase)
+         phasestr = phase;
+-    simulation.backtomod = this;
+-    simulation.transferToMain();
+-    simulation.backtomod = NULL;
++    getSimulation().backtomod = this;
++    getSimulation().transferToMain();
++    getSimulation().backtomod = NULL;
+ }
+ 
+ //void cSimpleModule::realtimewait(double secs)
+ //{
+-//    if (simulation.rtwait_modp!=NULL)
++//    if (getSimulation().rtwait_modp!=NULL)
+ //       opp_error("realtimewait(): one realtimewait() already pending in %s",
+-//                   simulation.rtwait_modp->fullPath());
++//                   getSimulation().rtwait_modp->fullPath());
+ //    else
+ //    {
+-//       simulation.rtwait_modp = this;
+-//       simulation.rtwait_from = clock();
+-//       simulation.rtwait_ticks = (clock_t)(secs*CLK_TCK);
+-//       simulation.transferToMain();
+-//       if (simulation.rtwait_modp!=NULL)
++//       getSimulation().rtwait_modp = this;
++//       getSimulation().rtwait_from = clock();
++//       getSimulation().rtwait_ticks = (clock_t)(secs*CLK_TCK);
++//       getSimulation().transferToMain();
++//       if (getSimulation().rtwait_modp!=NULL)
+ //          opp_error("received a message during a realtimewait() call");
+ //    }
+ //}
+ 
+ simtime_t cSimpleModule::simTime() const
+ {
+-    return simulation.simTime();
++    return getSimulation().simTime();
+ }
+ 
+ void cSimpleModule::endSimulation()
+@@ -1365,7 +1365,7 @@ void cSimpleModule::breakpoint(const char *label)
+ 
+ bool cSimpleModule::snapshot(cObject *object, const char *label)
+ {
+-    return simulation.snapshot(object, label);
++    return getSimulation().snapshot(object, label);
+ }
+ 
+ void cSimpleModule::recordScalar(const char *name, double value)
+@@ -1456,15 +1456,15 @@ bool cCompoundModule::callInitialize(int stage)
+     int numStages = numInitStages();
+     if (stage < numStages)
+     {
+-        cModule *oldcontext = simulation.contextModule();
+-        simulation.setContextModule( this );
++        cModule *oldcontext = getSimulation().contextModule();
++        getSimulation().setContextModule( this );
+ 
+         initialize(stage);
+ 
+         if (oldcontext)
+-            simulation.setContextModule( oldcontext );
++            getSimulation().setContextModule( oldcontext );
+         else
+-            simulation.setGlobalContext();
++            getSimulation().setGlobalContext();
+     }
+ 
+     // ...then for submods (meanwhile determine if more stages are needed)
+@@ -1490,15 +1490,15 @@ void cCompoundModule::callFinish()
+     }
+ 
+     // ...then for this module.
+-    cModule *oldcontext = simulation.contextModule();
+-    simulation.setContextModule( this );
++    cModule *oldcontext = getSimulation().contextModule();
++    getSimulation().setContextModule( this );
+ 
+     finish();
+ 
+     if (oldcontext)
+-        simulation.setContextModule( oldcontext );
++        getSimulation().setContextModule( oldcontext );
+     else
+-        simulation.setGlobalContext();
++        getSimulation().setGlobalContext();
+ }
+ 
+ void cCompoundModule::deleteModule()
+@@ -1506,7 +1506,7 @@ void cCompoundModule::deleteModule()
+     // delete submodules
+     for (cSubModIterator submod(*this); !submod.end(); submod++)
+     {
+-        if (submod() == (cModule *)simulation.runningModule())
++        if (submod() == (cModule *)getSimulation().runningModule())
+         {
+             throw new cException("Cannot delete a compound module from one of its submodules!");
+             // The reason is that deleteModule() of the currently executing
+@@ -1532,7 +1532,7 @@ void cCompoundModule::deleteModule()
+     }
+ 
+     // delete module
+-    simulation.deleteModule( id() );
++    getSimulation().deleteModule( id() );
+ }
+ 
+ //==========================================================================
+@@ -1544,11 +1544,11 @@ cModule *cSubModIterator::operator++(int)
+         return NULL;
+ 
+     // linear search among all modules -- should be replaced with something faster
+-    int lastId = simulation.lastModuleId();
++    int lastId = getSimulation().lastModuleId();
+     do
+     {
+         id++;
+-        cModule *mod = simulation.module(id);
++        cModule *mod = getSimulation().module(id);
+         if (mod!=NULL && parent==mod->parentModule())
+             return mod;
+     }
+@@ -1582,7 +1582,7 @@ static void _connect(cModule *frm, int frg, cModule *tom, int tog)
+     //VZ: NETWORKING EXTENSION OF CONNECT!!
+     bool src_local = frm->isOnLocalMachine();
+     bool dest_local = tom->isOnLocalMachine();
+-    cNetMod *netif = simulation.netInterface();
++    cNetMod *netif = getSimulation().netInterface();
+ 
+     //?? (*) If the mods were originally a simple mods on other hosts, we should
+     //?? temporally connect the presently unused gates, so the checkconnection won't
+@@ -1637,6 +1637,6 @@ void connect(cModule *frm, int frg,
+ 
+ void *operator new(size_t m,___nosuchclass *)
+ {
+-    return simulation.contextSimpleModule()->memAlloc( m );
++    return getSimulation().contextSimpleModule()->memAlloc( m );
+ }
+ 
+diff --git a/benchspec/CPU2006/471.omnetpp/src/libs/sim/cnetmod.cc b/benchspec/CPU2006/471.omnetpp/src/libs/sim/cnetmod.cc
+index f9871f6a..3c027c21 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/libs/sim/cnetmod.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/libs/sim/cnetmod.cc
+@@ -63,15 +63,15 @@ bool cNetMod::callInitialize(int stage)
+     if (stage < numStages)
+     {
+         // switch to the module's context for the duration of the initialize() call.
+-        cModule *oldcontext = simulation.contextModule();
+-        simulation.setContextModule( this );
++        cModule *oldcontext = getSimulation().contextModule();
++        getSimulation().setContextModule( this );
+ 
+         initialize( stage );
+ 
+         if (oldcontext)
+-            simulation.setContextModule( oldcontext );
++            getSimulation().setContextModule( oldcontext );
+         else
+-            simulation.setGlobalContext();
++            getSimulation().setGlobalContext();
+     }
+     return stage < numStages-1;  // return true if there's more stages to do
+ }
+@@ -80,15 +80,15 @@ void cNetMod::callFinish()
+ {
+     // code copied from cSimpleModule...
+ 
+-    cModule *oldcontext = simulation.contextModule();
+-    simulation.setContextModule( this );
++    cModule *oldcontext = getSimulation().contextModule();
++    getSimulation().setContextModule( this );
+ 
+     finish();
+ 
+     if (oldcontext)
+-        simulation.setContextModule( oldcontext );
++        getSimulation().setContextModule( oldcontext );
+     else
+-        simulation.setGlobalContext();
++        getSimulation().setGlobalContext();
+ }
+ 
+ 
+diff --git a/benchspec/CPU2006/471.omnetpp/src/libs/sim/cobject.cc b/benchspec/CPU2006/471.omnetpp/src/libs/sim/cobject.cc
+index 55982f80..594feacb 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/libs/sim/cobject.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/libs/sim/cobject.cc
+@@ -156,7 +156,10 @@ void cObject::setOwner(cObject *newowner)
+ 
+ cObject *cObject::defaultOwner() const
+ {
+-    return simulation.localList();
++    cSimulation *simulation = getSimulationPtr();
++    if (simulation)
++        return simulation->localList();
++    return NULL;
+ }
+ 
+ const char *cObject::fullPath() const
+@@ -297,3 +300,37 @@ static bool _do_list(cObject *obj, bool beg, ostream& s)
+         return true;
+ }
+ 
++cHead &getNetworks() {
++    static cHead networks("networks");
++    return networks;
++}
++
++cHead &getModuleTypes() {
++    static cHead modtypes("module-types");
++    return modtypes;
++}
++
++cHead &getModuleInterfaces() {
++    static cHead modinterfaces("module-interfaces");
++    return modinterfaces;
++}
++
++cHead &getLinkTypes() {
++    static cHead linktypes("link-types");
++    return linktypes;
++}
++
++cHead &getFunctions() {
++    static cHead functions("functions");
++    return functions;
++}
++
++cHead &getClasses() {
++    static cHead classes("classes");
++    return classes;
++}
++
++cHead &getEnums() {
++    static cHead enums("enums");
++    return enums;
++}
+diff --git a/benchspec/CPU2006/471.omnetpp/src/libs/sim/coutvect.cc b/benchspec/CPU2006/471.omnetpp/src/libs/sim/coutvect.cc
+index 103b722d..cfc9f8a5 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/libs/sim/coutvect.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/libs/sim/coutvect.cc
+@@ -44,7 +44,7 @@ cOutVector::cOutVector(const char *nam, int tupl) : cObject(nam)
+ 
+     // register early if possible (only needed for Akaroa...)
+     if (nam)
+-        handle = ev.registerOutputVector(simulation.contextModule()->fullPath(), name(), tuple);
++        handle = ev.registerOutputVector(getSimulation().contextModule()->fullPath(), name(), tuple);
+ }
+ 
+ cOutVector::~cOutVector()
+@@ -61,7 +61,7 @@ void cOutVector::setName(const char *nam)
+ 
+     // register early (only needed for Akaroa...)
+     if (nam)
+-        handle = ev.registerOutputVector(simulation.contextModule()->fullPath(), name(), tuple);
++        handle = ev.registerOutputVector(getSimulation().contextModule()->fullPath(), name(), tuple);
+ }
+ 
+ void cOutVector::info(char *buf)
+@@ -90,10 +90,10 @@ bool cOutVector::record(double value)
+ 
+     // initialize if not yet done
+     if (!handle)
+-        handle = ev.registerOutputVector(simulation.contextModule()->fullPath(), name(), tuple);
++        handle = ev.registerOutputVector(getSimulation().contextModule()->fullPath(), name(), tuple);
+ 
+     // pass data to envir for storage
+-    bool stored = ev.recordInOutputVector(handle, simulation.simTime(), value);
++    bool stored = ev.recordInOutputVector(handle, getSimulation().simTime(), value);
+     if (stored) num_stored++;
+     return stored;
+ }
+@@ -115,10 +115,10 @@ bool cOutVector::record(double value1, double value2)
+ 
+     // initialize if not yet done
+     if (!handle)
+-        handle = ev.registerOutputVector(simulation.contextModule()->fullPath(), name(), tuple);
++        handle = ev.registerOutputVector(getSimulation().contextModule()->fullPath(), name(), tuple);
+ 
+     // pass data to envir for storage
+-    bool stored = ev.recordInOutputVector(handle, simulation.simTime(), value1, value2);
++    bool stored = ev.recordInOutputVector(handle, getSimulation().simTime(), value1, value2);
+     if (stored) num_stored++;
+     return stored;
+ }
+diff --git a/benchspec/CPU2006/471.omnetpp/src/libs/sim/cpar.cc b/benchspec/CPU2006/471.omnetpp/src/libs/sim/cpar.cc
+index 71fe4e0b..46ac18e5 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/libs/sim/cpar.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/libs/sim/cpar.cc
+@@ -980,7 +980,7 @@ bool cPar::setfunction(char *text)
+ cPar& cPar::read()
+ {
+     // get it from ini file
+-    const char *s = ev.getParameter(simulation.runNumber(), fullPath());
++    const char *s = ev.getParameter(getSimulation().runNumber(), fullPath());
+     if (s!=NULL)
+     {
+        bool success = setFromText(s,'?');
+diff --git a/benchspec/CPU2006/471.omnetpp/src/libs/sim/csimul.cc b/benchspec/CPU2006/471.omnetpp/src/libs/sim/csimul.cc
+index fff3ae78..f62dc5df 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/libs/sim/csimul.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/libs/sim/csimul.cc
+@@ -40,7 +40,7 @@
+ //==========================================================================
+ //=== Global object:
+ 
+-cSimulation simulation("simulation");
++static cSimulation *simulation = NULL;
+ 
+ //==========================================================================
+ 
+@@ -206,9 +206,9 @@ static void writemodule( ostream& os, cModule& m, int indent )
+ static void writesubmodules(ostream& os, cModule *p, int indent )
+ {
+     writemodule( os, *p, indent );
+-    for (int i=0; i<=simulation.lastModuleId(); i++)
+-        if (simulation.module(i) && p==simulation.module(i)->parentModule())
+-            writesubmodules(os, simulation.module(i), indent+4 );
++    for (int i=0; i<=getSimulation().lastModuleId(); i++)
++        if (getSimulation().module(i) && p==getSimulation().module(i)->parentModule())
++            writesubmodules(os, getSimulation().module(i), indent+4 );
+ }
+ 
+ void cSimulation::writeContents( ostream& os )
+@@ -228,7 +228,7 @@ int cSimulation::addModule(cModule *mod)
+     // Insert module into the vector.
+     // The module will get (last_id+1) as ID. We do not reuse "holes"
+     // (empty slots) in the vector because we want the module ids to be
+-    // unique during the whole simulation.
++    // unique during the whole getSimulation().
+ 
+     last_id++;
+ 
+@@ -380,7 +380,7 @@ void cSimulation::startRun()
+     {
+         cMessage *msg = new cMessage;
+         msg->setArrivalTime(0.0);
+-        simulation.msgQueue.insert( msg );
++        getSimulation().msgQueue.insert( msg );
+         netInterface()->after_modinit_msg = msg;
+     }
+ }
+@@ -528,20 +528,20 @@ void cSimulation::transferTo(cSimpleModule *modp)
+         throw new cException("transferTo(): attempt to transfer to NULL");
+ 
+     // switch to activity() of the simple module
+-    simulation.exception = NULL;
++    getSimulation().exception = NULL;
+     runningmodp = modp;
+     cCoroutine::switchTo(modp->coroutine);
+ 
+     // if exception occurred in activity(), take it from cSimpleModule::activate() and pass it up
+-    if (simulation.exception)
++    if (getSimulation().exception)
+     {
+         // alas, type info was lost, so we have to recover manually...
+-        if (simulation.exception_type==0)
+-            throw (cException *)simulation.exception;
+-        else if (simulation.exception_type==1)
+-            throw (cTerminationException *)simulation.exception;
+-        else if (simulation.exception_type==2)
+-            throw (cEndModuleException *)simulation.exception;
++        if (getSimulation().exception_type==0)
++            throw (cException *)getSimulation().exception;
++        else if (getSimulation().exception_type==1)
++            throw (cTerminationException *)getSimulation().exception;
++        else if (getSimulation().exception_type==2)
++            throw (cEndModuleException *)getSimulation().exception;
+     }
+ 
+     if (modp->stackOverflow())
+@@ -620,3 +620,15 @@ cSimpleModule *cSimulation::contextSimpleModule() const
+ }
+ 
+ 
++cSimulation &getSimulation() {
++    if (!simulation) {
++        simulation = new cSimulation("simulation");
++        simulation->setOwner(simulation);
++    }
++
++    return *simulation;
++}
++
++cSimulation *getSimulationPtr() {
++    return simulation;
++}
+diff --git a/benchspec/CPU2006/471.omnetpp/src/libs/sim/cstruct.cc b/benchspec/CPU2006/471.omnetpp/src/libs/sim/cstruct.cc
+index fe1b06af..9e9957d6 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/libs/sim/cstruct.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/libs/sim/cstruct.cc
+@@ -151,7 +151,7 @@ bool cStructDescriptor::hasDescriptor(const char *classname)
+     char sdclass[80];
+     strcpy(sdclass,classname);
+     strcat(sdclass,"Descriptor");
+-    return classes.find(sdclass)!=NULL;
++    return getClasses().find(sdclass)!=NULL;
+ }
+ 
+ cStructDescriptor *cStructDescriptor::createDescriptorFor(cObject *obj)
+diff --git a/benchspec/CPU2006/471.omnetpp/src/libs/sim/ctopo.cc b/benchspec/CPU2006/471.omnetpp/src/libs/sim/ctopo.cc
+index 79c3157c..a4443f2d 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/libs/sim/ctopo.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/libs/sim/ctopo.cc
+@@ -138,14 +138,14 @@ void cTopology::extractFromNetwork(int (*selfunc)(cModule *,void *), void *data)
+ 
+     int mod_id, gate_id;
+ 
+-    Node *temp_nodev = new Node[simulation.lastModuleId()];
++    Node *temp_nodev = new Node[getSimulation().lastModuleId()];
+ 
+     // Loop through all modules and find those which have the required
+     // parameter with the (optionally) required value.
+     int k=0;
+-    for (mod_id=0; mod_id<=simulation.lastModuleId(); mod_id++)
++    for (mod_id=0; mod_id<=getSimulation().lastModuleId(); mod_id++)
+     {
+-        cModule *mod = simulation.module(mod_id);
++        cModule *mod = getSimulation().module(mod_id);
+         if (mod && selfunc(mod,data))
+         {
+             // ith module is OK, insert into nodev[]
+@@ -177,7 +177,7 @@ void cTopology::extractFromNetwork(int (*selfunc)(cModule *,void *), void *data)
+         // Loop through all its gates and find those which come
+         // from or go to modules included in the topology.
+ 
+-        cModule *mod = simulation.module(nodev[k].module_id);
++        cModule *mod = getSimulation().module(nodev[k].module_id);
+         sTopoLink *temp_out_links = new sTopoLink[mod->gates()];
+ 
+         int n_out=0;
+diff --git a/benchspec/CPU2006/471.omnetpp/src/libs/sim/ctypes.cc b/benchspec/CPU2006/471.omnetpp/src/libs/sim/ctypes.cc
+index d29d054a..4e54d429 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/libs/sim/ctypes.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/libs/sim/ctypes.cc
+@@ -139,9 +139,9 @@ cModuleInterface::cModuleInterface(const char *name, sDescrItem *descr_tab ) :
+     setup( descr_tab );
+ 
+     // if no interface has been registered with this name, register ourselves
+-    if (modinterfaces.find(name)!=NULL)  // FIXME!!!!!!!!
++    if (getModuleInterfaces().find(name)!=NULL)  // FIXME!!!!!!!!
+     {
+-        setOwner( &modinterfaces );
++        setOwner( &getModuleInterfaces() );
+     }
+ 
+     // do consistency check anyway
+@@ -410,8 +410,8 @@ cModule *cModuleType::create(const char *modname, cModule *parentmod, bool local
+     // Object members of the new module class are collected to
+     // the temporary list classmembers.
+     cHead classmembers;
+-    cHead *oldl = simulation.localList();
+-    simulation.setLocalList( &classmembers );
++    cHead *oldl = getSimulation().localList();
++    getSimulation().setLocalList( &classmembers );
+ 
+     // create the new module object
+     if (local)
+@@ -427,11 +427,11 @@ cModule *cModuleType::create(const char *modname, cModule *parentmod, bool local
+         i++;
+         p->setOwner( &(mod->members) );
+     }
+-    simulation.setLocalList( oldl );
++    getSimulation().setLocalList( oldl );
+ 
+     mod->setModuleType( this );
+ 
+-    simulation.addModule(mod);
++    getSimulation().addModule(mod);
+ 
+     if (parentmod!=NULL)
+     {
+@@ -439,8 +439,8 @@ cModule *cModuleType::create(const char *modname, cModule *parentmod, bool local
+     }
+     else
+     {
+-         mod->setOwner( &simulation );
+-         simulation.setSystemModule( mod );
++         mod->setOwner( &getSimulation() );
++         getSimulation().setSystemModule( mod );
+     }
+ 
+     // add parameters and gates to the new module, using module interface object
+@@ -471,7 +471,7 @@ cModule *cModuleType::createScheduleInit(char *modname, cModule *parentmod)
+     //
+     cModule *mod = create(modname, parentmod);
+     mod->buildInside();
+-    mod->scheduleStart( simulation.simTime() );
++    mod->scheduleStart( getSimulation().simTime() );
+     mod->callInitialize();
+     return mod;
+ }
+@@ -618,7 +618,7 @@ MathFunc4Args cFunctionType::mathFunc4Args()
+ 
+ cFunctionType *findfunctionbyptr(MathFunc f)
+ {
+-    cIterator i(functions);
++    cIterator i(getFunctions());
+     while( !i.end() )
+     {
+         cFunctionType *ff = (cFunctionType *) i++;
+@@ -637,7 +637,7 @@ cClassRegister::cClassRegister(const char *name, void *(*f)()) : cObject(name)
+ 
+ void *createOne(const char *classname)
+ {
+-    cClassRegister *p = (cClassRegister *)classes.find( classname );
++    cClassRegister *p = (cClassRegister *)getClasses().find( classname );
+     if (!p)
+         throw new cException("Registration object for class \"%s\" not found", classname);
+ 
+diff --git a/benchspec/CPU2006/471.omnetpp/src/libs/sim/util.cc b/benchspec/CPU2006/471.omnetpp/src/libs/sim/util.cc
+index 4c02cef7..86b9a3a9 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/libs/sim/util.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/libs/sim/util.cc
+@@ -365,14 +365,14 @@ void opp_warning(int errc...)
+     vsprintf(message,emsg[errc],va);
+     va_end(va);
+ 
+-    if (!simulation.contextModule())
++    if (!getSimulation().contextModule())
+     {
+         // we're called from global context
+         ev.printfmsg( "%s.", message);
+     }
+     else
+     {
+-        ev.printfmsg( "Module %s: %s.", simulation.contextModule()->fullPath(), message);
++        ev.printfmsg( "Module %s: %s.", getSimulation().contextModule()->fullPath(), message);
+     }
+ }
+ 
+@@ -384,14 +384,14 @@ void opp_warning(const char *msgformat...)
+     vsprintf(message,msgformat,va);
+     va_end(va);
+ 
+-    if (!simulation.contextModule())
++    if (!getSimulation().contextModule())
+     {
+         // we're called from global context
+         ev.printfmsg( "%s.", message);
+     }
+     else
+     {
+-        ev.printfmsg( "Module %s: %s.", simulation.contextModule()->fullPath(), message);
++        ev.printfmsg( "Module %s: %s.", getSimulation().contextModule()->fullPath(), message);
+     }
+ }
+ 
+diff --git a/benchspec/CPU2006/471.omnetpp/src/omnet_include/chead.h b/benchspec/CPU2006/471.omnetpp/src/omnet_include/chead.h
+index c4980c13..2e617b6d 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/omnet_include/chead.h
++++ b/benchspec/CPU2006/471.omnetpp/src/omnet_include/chead.h
+@@ -207,26 +207,26 @@ class SIM_API const_cIterator
+ 
+ /** Find a cNetworkType. */
+ inline cNetworkType *findNetwork(const char *s)
+-  {return (cNetworkType *)networks.find(s);}
++  {return (cNetworkType *)getNetworks().find(s);}
+ 
+ /** Find a cModuleType. */
+ inline cModuleType *findModuleType(const char *s)
+-  {return (cModuleType *)modtypes.find(s);}
++  {return (cModuleType *)getModuleTypes().find(s);}
+ 
+ /** Find a cModuleInterface. */
+ inline cModuleInterface *findModuleInterface(const char *s)
+-  {return (cModuleInterface *)modinterfaces.find(s);}
++  {return (cModuleInterface *)getModuleInterfaces().find(s);}
+ 
+ /** Find a cLinkType. */
+ inline cLinkType *findLink(const char *s)
+-  {return (cLinkType *)linktypes.find(s);}
++  {return (cLinkType *)getLinkTypes().find(s);}
+ 
+ /** Find a cFunctionType. */
+ cFunctionType *findFunction(const char *s,int argcount);
+ 
+ /** Find a cEnum. */
+ inline cEnum *findEnum(const char *s)
+-  {return (cEnum *)enums.find(s);}
++  {return (cEnum *)getEnums().find(s);}
+ //@}
+ 
+ #endif
+diff --git a/benchspec/CPU2006/471.omnetpp/src/omnet_include/cmessage.h b/benchspec/CPU2006/471.omnetpp/src/omnet_include/cmessage.h
+index e6e61a37..cb6a22d6 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/omnet_include/cmessage.h
++++ b/benchspec/CPU2006/471.omnetpp/src/omnet_include/cmessage.h
+@@ -219,7 +219,7 @@ class SIM_API cMessage : public cObject
+     /**
+      * Sets the message's time stamp to the current simulation time.
+      */
+-    void setTimestamp() {tstamp=simulation.simTime();}
++    void setTimestamp() {tstamp=getSimulation().simTime();}
+ 
+     /**
+      * Directly sets the message's time stamp.
+diff --git a/benchspec/CPU2006/471.omnetpp/src/omnet_include/cmodule.h b/benchspec/CPU2006/471.omnetpp/src/omnet_include/cmodule.h
+index fea5afeb..14f1198b 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/omnet_include/cmodule.h
++++ b/benchspec/CPU2006/471.omnetpp/src/omnet_include/cmodule.h
+@@ -892,7 +892,7 @@ class SIM_API cSimpleModule : public cModule
+      *
+      * See also class cWatch and the WATCH() macro.
+      */
+-    bool snapshot(cObject *obj=&simulation, const char *label=NULL); // write snapshot file
++    bool snapshot(cObject *obj=&getSimulation(), const char *label=NULL); // write snapshot file
+ 
+     /**
+      * Specifies a breakpoint. During simulation, if execution gets to
+@@ -1418,14 +1418,14 @@ class SIM_API cSubModIterator
+     /**
+      * DEPRECATED because it might return null reference; use operator() instead.
+      */
+-    cModule& operator[](int)  {return id==-1 ? *(cModule*)NULL : *(simulation.module(id));}
++    cModule& operator[](int)  {return id==-1 ? *(cModule*)NULL : *(getSimulation().module(id));}
+ 
+     /**
+      * Returns pointer to the current module. The pointer then
+      * may be cast to the appropriate cModule subclass.
+      * Returns NULL of the iterator has reached the end of the list.
+      */
+-    cModule *operator()()  {return id==-1 ? NULL : simulation.module(id);}
++    cModule *operator()()  {return id==-1 ? NULL : getSimulation().module(id);}
+ 
+     /**
+      * Returns true of the iterator has reached the end of the list.
+diff --git a/benchspec/CPU2006/471.omnetpp/src/omnet_include/cobject.h b/benchspec/CPU2006/471.omnetpp/src/omnet_include/cobject.h
+index 3d5273ba..3fbf2ab2 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/omnet_include/cobject.h
++++ b/benchspec/CPU2006/471.omnetpp/src/omnet_include/cobject.h
+@@ -37,13 +37,13 @@ class  cIterator;
+ class  cHead;
+ 
+ //=== Global objects:
+-SIM_API extern cHead networks;            ///< List of available networks.
+-SIM_API extern cHead modinterfaces;       ///< List of all module interfaces.
+-SIM_API extern cHead modtypes;            ///< List of all module types.
+-SIM_API extern cHead linktypes;           ///< List of link types.
+-SIM_API extern cHead functions;           ///< List of function types.
+-SIM_API extern cHead classes;             ///< List of cClassRegister objects.
+-SIM_API extern cHead enums;               ///< List of cEnum objects.
++SIM_API cHead &getNetworks();            ///< List of available networks.
++SIM_API cHead &getModuleInterfaces();       ///< List of all module interfaces.
++SIM_API cHead &getModuleTypes();            ///< List of all module types.
++SIM_API cHead &getLinkTypes();           ///< List of link types.
++SIM_API cHead &getFunctions();           ///< List of function types.
++SIM_API cHead &getClasses();             ///< List of cClassRegister objects.
++SIM_API cHead &getEnums();               ///< List of cEnum objects.
+ 
+ 
+ /**
+diff --git a/benchspec/CPU2006/471.omnetpp/src/omnet_include/csimul.h b/benchspec/CPU2006/471.omnetpp/src/omnet_include/csimul.h
+index 528ce7da..ded8757a 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/omnet_include/csimul.h
++++ b/benchspec/CPU2006/471.omnetpp/src/omnet_include/csimul.h
+@@ -42,13 +42,6 @@ class  TModInspector;
+ class  cStatistic;
+ class  cException;
+ 
+-/**
+- * Global simulation instance.
+- *
+- * @ingroup Internals
+- */
+-SIM_API extern cSimulation simulation;
+-
+ //==========================================================================
+ 
+ /**
+@@ -380,5 +373,7 @@ class SIM_API cSimulation : public cObject
+ class ___nosuchclass;
+ void *operator new(size_t m,___nosuchclass *);
+ 
++SIM_API cSimulation &getSimulation();
++SIM_API cSimulation *getSimulationPtr();
+ #endif
+ 
+diff --git a/benchspec/CPU2006/471.omnetpp/src/omnet_include/ctopo.h b/benchspec/CPU2006/471.omnetpp/src/omnet_include/ctopo.h
+index ec07b645..8c925c3c 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/omnet_include/ctopo.h
++++ b/benchspec/CPU2006/471.omnetpp/src/omnet_include/ctopo.h
+@@ -90,7 +90,7 @@ class SIM_API cTopology : public cObject
+         /**
+          * Returns the pointer to the network module to which this node corresponds.
+          */
+-        cModule *module() const           {return &simulation[module_id];}
++        cModule *module() const           {return &getSimulation()[module_id];}
+ 
+         /**
+          * Returns the weight of this node. Weight is used with the
+diff --git a/benchspec/CPU2006/471.omnetpp/src/omnet_include/macros.h b/benchspec/CPU2006/471.omnetpp/src/omnet_include/macros.h
+index 4cfad224..81a5351a 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/omnet_include/macros.h
++++ b/benchspec/CPU2006/471.omnetpp/src/omnet_include/macros.h
+@@ -44,7 +44,7 @@
+  * @hideinitializer
+  */
+ #define Define_Network(NAME) \
+-  EXECUTE_ON_STARTUP(NAME##__net, (new NAME(#NAME))->setOwner(&networks);)
++  EXECUTE_ON_STARTUP(NAME##__net, (new NAME(#NAME))->setOwner(&getNetworks());)
+ 
+ /**
+  * Link type definition. The macro expands to the definition of a cLinkType object;
+@@ -54,7 +54,7 @@
+  * @hideinitializer
+  */
+ #define Define_Link(NAME,DELAY,ERROR,DATARATE) \
+-  EXECUTE_ON_STARTUP(NAME##__linkt, (new cLinkType(#NAME, DELAY, ERROR, DATARATE))->setOwner(&linktypes);)
++  EXECUTE_ON_STARTUP(NAME##__linkt, (new cLinkType(#NAME, DELAY, ERROR, DATARATE))->setOwner(&getLinkTypes());)
+ 
+ /**
+  * Registers a mathematical function that takes 0, 1, 2 or 3 double arguments
+@@ -67,11 +67,11 @@
+  * @hideinitializer
+  */
+ #define Define_Function(NAME,ARGCOUNT) \
+-  EXECUTE_ON_STARTUP(NAME##__##ARGCOUNT##__func, (new cFunctionType(#NAME,NAME,ARGCOUNT))->setOwner(&functions);)
++  EXECUTE_ON_STARTUP(NAME##__##ARGCOUNT##__func, (new cFunctionType(#NAME,NAME,ARGCOUNT))->setOwner(&getFunctions());)
+ 
+ #if defined(SPEC_CPU_STDLIB_USING_ERROR)
+ #define Define_Math_Function(NAME,ARGCOUNT) \
+-  EXECUTE_ON_STARTUP(NAME##__##ARGCOUNT##__func, (new cFunctionType(#NAME,std::NAME,ARGCOUNT))->setOwner(&functions);)
++  EXECUTE_ON_STARTUP(NAME##__##ARGCOUNT##__func, (new cFunctionType(#NAME,std::NAME,ARGCOUNT))->setOwner(&getFunctions());)
+ #endif
+ 
+ 
+@@ -83,7 +83,7 @@
+  * @hideinitializer
+  */
+ #define Define_Function2(NAME,FUNCTION,ARGCOUNT) \
+-  EXECUTE_ON_STARTUP(NAME##__##ARGCOUNT##__func, (new cFunctionType(#NAME,FUNCTION,ARGCOUNT))->setOwner(&functions);)
++  EXECUTE_ON_STARTUP(NAME##__##ARGCOUNT##__func, (new cFunctionType(#NAME,FUNCTION,ARGCOUNT))->setOwner(&getFunctions());)
+ 
+ /**
+  * Register class. This defines a factory object which makes it possible
+@@ -93,7 +93,7 @@
+  */
+ #define Register_Class(CLASSNAME) \
+   void *CLASSNAME##__create() {return new CLASSNAME;} \
+-  EXECUTE_ON_STARTUP(CLASSNAME##__class, (new cClassRegister(#CLASSNAME,CLASSNAME##__create))->setOwner(&classes);)
++  EXECUTE_ON_STARTUP(CLASSNAME##__class, (new cClassRegister(#CLASSNAME,CLASSNAME##__create))->setOwner(&getClasses());)
+ 
+ //@}
+ 
+@@ -121,7 +121,7 @@
+   { \
+      return (cModule *) new CLASSNAME(name, parentmod); \
+   } \
+-  EXECUTE_ON_STARTUP(CLASSNAME##__mod, (new cModuleType(#CLASSNAME,#CLASSNAME,(ModuleCreateFunc)CLASSNAME##__create))->setOwner(&modtypes);)
++  EXECUTE_ON_STARTUP(CLASSNAME##__mod, (new cModuleType(#CLASSNAME,#CLASSNAME,(ModuleCreateFunc)CLASSNAME##__create))->setOwner(&getModuleTypes());)
+ 
+ /**
+  * Similar to Define_Module(), except that it couples the class with the
+@@ -135,7 +135,7 @@
+   { \
+      return (cModule *) new CLASSNAME(name, parentmod); \
+   } \
+-  EXECUTE_ON_STARTUP(CLASSNAME##__mod, (new cModuleType(#CLASSNAME,#INTERFACENAME,(ModuleCreateFunc)CLASSNAME##__create))->setOwner(&modtypes);)
++  EXECUTE_ON_STARTUP(CLASSNAME##__mod, (new cModuleType(#CLASSNAME,#INTERFACENAME,(ModuleCreateFunc)CLASSNAME##__create))->setOwner(&getModuleTypes());)
+ 
+ /**
+  * This macro facilitates the declaration of a simple module class, and
+@@ -178,7 +178,7 @@
+ 
+ // internal: registers a module interface specified with the Interface..EndInterface macros
+ #define Register_ModuleInterface(CLASSNAME) \
+-  EXECUTE_ON_STARTUP(CLASSNAME##__if, (new cModuleInterface(#CLASSNAME, CLASSNAME##__descr))->setOwner(&modinterfaces);)
++  EXECUTE_ON_STARTUP(CLASSNAME##__if, (new cModuleInterface(#CLASSNAME, CLASSNAME##__descr))->setOwner(&getModuleInterfaces());)
+ 
+ // internal: gate types. To be used with module interface declarations.
+ #define GateDir_Input      'I'
+diff --git a/benchspec/CPU2006/471.omnetpp/src/utils.cc b/benchspec/CPU2006/471.omnetpp/src/utils.cc
+index 7d7ba606..3beb8c1f 100755
+--- a/benchspec/CPU2006/471.omnetpp/src/utils.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/utils.cc
+@@ -63,7 +63,7 @@ void MessageTracer::created(MessageId *m)
+ {
+     if (!f) open();
+     if (lastId) fprintf(f,"C I:%d T:%d P:%d E:%ld %s\n", lastId->id, lastId->treeId, lastId->parentId,
+-                        simulation.eventNumber(), simulation.contextModule()->fullPath());
++                        getSimulation().eventNumber(), getSimulation().contextModule()->fullPath());
+     lastId = m;
+ }
+ 
+@@ -71,21 +71,21 @@ void MessageTracer::cloned(MessageId *m)
+ {
+     if (!f) open();
+     fprintf(f,"L I:%d T:%d P:%d E:%ld %s\n", m->id, m->treeId, m->parentId,
+-            simulation.eventNumber(), simulation.contextModule()->fullPath());
++            getSimulation().eventNumber(), getSimulation().contextModule()->fullPath());
+ }
+ 
+ void MessageTracer::assigned(MessageId *m)
+ {
+     if (!f) open();
+     fprintf(f,"A I:%d T:%d P:%d E:%ld %s\n", m->id, m->treeId, m->parentId,
+-            simulation.eventNumber(), simulation.contextModule()->fullPath());
++            getSimulation().eventNumber(), getSimulation().contextModule()->fullPath());
+     if (m==lastId) lastId = NULL;
+ }
+ 
+ void MessageTracer::deleted(MessageId *m)
+ {
+     fprintf(f,"D I:%d T:%d P:%d E:%ld %s\n", m->id, m->treeId, m->parentId,
+-            simulation.eventNumber(), simulation.contextModule()->fullPath());
++            getSimulation().eventNumber(), getSimulation().contextModule()->fullPath());
+ }
+ 
+ 

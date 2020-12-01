@@ -1,0 +1,27 @@
+diff -rHu opae-intel-fpga-driver-2.0.4/drivers/fpga/intel/afu.c /usr/src/opae-intel-fpga-driver-2.0.4-2/drivers/fpga/intel/afu.c
+--- opae-intel-fpga-driver-2.0.4/drivers/fpga/intel/afu.c       2019-12-13 19:36:50.000000000 -0500
++++ /usr/src/opae-intel-fpga-driver-2.0.4-2/drivers/fpga/intel/afu.c    2020-04-22 19:26:37.939529394 -0400
+@@ -1135,6 +1135,12 @@
+        return -EINVAL;
+ }
+
++#ifdef CONFIG_HAVE_IOREMAP_PROT
++const struct vm_operations_struct afu_vma_ops = {
++    .access = generic_access_phys,
++};
++#endif /* CONFIG_HAVE_IOREMAP_PROT */
++
+ static int afu_mmap(struct file *filp, struct vm_area_struct *vma)
+ {
+        struct fpga_afu_region region;
+@@ -1161,7 +1167,10 @@
+        if ((vma->vm_flags & VM_WRITE) && !(region.flags & FPGA_REGION_WRITE))
+                return -EPERM;
+
++#ifdef CONFIG_HAVE_IOREMAP_PROT
++        vma->vm_ops = &afu_vma_ops;
++#endif /* CONFIG_HAVE_IOREMAP_PROT */
+        vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+        return remap_pfn_range(vma, vma->vm_start,
+                        (region.phys + (offset - region.offset)) >> PAGE_SHIFT,
+                        size, vma->vm_page_prot);

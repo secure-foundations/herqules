@@ -1,0 +1,13 @@
+hq_fifo.json
+
++incdir+.
+ccip_std_afu.sv
+ccip_interface_reg.sv
+hq_fifo_afu.sv
+server_interface.vh
+hq_fifo_csr.sv
+hq_fifo.sv
+server_wrapper.sv
+server.v
+SizedFIFO.v
+FIFO2.v

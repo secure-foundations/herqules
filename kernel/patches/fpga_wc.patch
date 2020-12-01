@@ -1,0 +1,26 @@
+diff -rHu opae-intel-fpga-driver-2.0.4/drivers/fpga/intel/pcie.c /usr/src/opae-intel-fpga-driver-2.0.4-2/drivers/fpga/intel/pcie.c
+--- opae-intel-fpga-driver-2.0.4/drivers/fpga/intel/pcie.c      2019-12-13 19:36:50.000000000 -0500
++++ /usr/src/opae-intel-fpga-driver-2.0.4-2/drivers/fpga/intel/pcie.c   2020-04-22 19:26:50.371931447 -0400
+@@ -227,7 +229,7 @@
+                return NULL;
+
+        region->bar = bar;
+-       region->ioaddr = pci_ioremap_bar(pdev, bar);
++       region->ioaddr = pci_ioremap_wc_bar(pdev, bar);
+        if (!region->ioaddr) {
+                dev_err(&pdev->dev, "can't ioremap memory from BAR %d.\n", bar);
+                devm_kfree(&pdev->dev, region);
+diff -rHu opae-intel-fpga-driver-2.0.4/drivers/fpga/intel/afu.c /usr/src/opae-intel-fpga-driver-2.0.4-2/drivers/fpga/intel/afu.c
+--- opae-intel-fpga-driver-2.0.4/drivers/fpga/intel/afu.c       2019-12-13 19:36:50.000000000 -0500
++++ /usr/src/opae-intel-fpga-driver-2.0.4-2/drivers/fpga/intel/afu.c    2020-04-22 19:26:37.939529394 -0400
+@@ -1161,7 +1167,9 @@
+        if ((vma->vm_flags & VM_WRITE) && !(region.flags & FPGA_REGION_WRITE))
+                return -EPERM;
+
+-       vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
++       vma->vm_page_prot = region.index == FPGA_PORT_INDEX_UAFU ?
++                           pgprot_writecombine(vma->vm_page_prot) :
++                           pgprot_noncached(vma->vm_page_prot);
+        return remap_pfn_range(vma, vma->vm_start,
+                        (region.phys + (offset - region.offset)) >> PAGE_SHIFT,
+                        size, vma->vm_page_prot);

@@ -1,0 +1,22 @@
+diff --git a/benchspec/CPU2006/400.perlbench/src/spec_config.h b/benchspec/CPU2006/400.perlbench/src/spec_config.h
+index d9748dbb..1333f31d 100644
+--- a/benchspec/CPU2006/400.perlbench/src/spec_config.h
++++ b/benchspec/CPU2006/400.perlbench/src/spec_config.h
+@@ -429,7 +429,7 @@
+ #endif
+ 
+ #if defined(SPEC_CPU_SOLARIS) || defined(SPEC_CPU_WINDOWS) || \
+-    defined(SPEC_CPU_IRIX)
++    defined(SPEC_CPU_IRIX) || defined(SPEC_CPU_LINUX)
+ # if !defined(SPEC_CPU_NO_I_FCNTL)
+ #  define I_FCNTL
+ # endif
+@@ -801,7 +801,7 @@
+  * Normally these would just be turned off, but since some platforms
+  * REQUIRE them, it's best that everyone have them.
+  */
+-#if defined(SPEC_CPU_SOLARIS) && defined(SPEC_CPU_LP64)
++#if defined(SPEC_CPU_LINUX) || (defined(SPEC_CPU_SOLARIS) && defined(SPEC_CPU_LP64))
+ # define SPEC_CPU_NO_USE_STDIO_PTR
+ # define SPEC_CPU_NO_USE_STDIO_BASE
+ #endif

@@ -1,0 +1,33 @@
+[submodule "llvm-project"]
+	path = llvm/llvm-project
+	url = https://github.com/ddcc/llvm-project.git
+	branch = hw-cfi
+[submodule "llvm-test-suite"]
+	path = tests/llvm-test-suite
+	url = https://github.com/ddcc/llvm-test-suite.git
+	branch = hw-cfi
+[submodule "musl"]
+	path = rtlib/musl
+	url = https://github.com/ddcc/musl.git
+	branch = hw-cfi
+[submodule "musl-cross-make"]
+	path = rtlib/musl-cross-make
+	url = https://github.com/ddcc/musl-cross-make.git
+	branch = hw-cfi
+[submodule "verifier/abseil"]
+	path = verifier/abseil
+	url = https://github.com/abseil/abseil-cpp.git
+	branch = master
+[submodule "nginx"]
+	path = tests/nginx
+	url = https://github.com/ddcc/nginx.git
+	branch = master
+[submodule "wrk"]
+	path = tests/wrk
+	url = https://github.com/wg/wrk.git
+[submodule "tests/ripe"]
+	path = tests/ripe
+	url = https://github.com/ddcc/ripe64.git
+[submodule "zsim"]
+	path = tests/zsim
+	url = https://github.com/ddcc/zsim.git

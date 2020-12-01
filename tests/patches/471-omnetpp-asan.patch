@@ -1,0 +1,27 @@
+diff --git a/benchspec/CPU2006/471.omnetpp/src/libs/cmdenv/heap.cc b/benchspec/CPU2006/471.omnetpp/src/libs/cmdenv/heap.cc
+index 2c92a2cb..f947637d 100644
+--- a/benchspec/CPU2006/471.omnetpp/src/libs/cmdenv/heap.cc
++++ b/benchspec/CPU2006/471.omnetpp/src/libs/cmdenv/heap.cc
+@@ -295,6 +295,7 @@ void dispheap()
+ }
+ #endif
+ 
++#if !defined(__SANITIZE_ADDRESS__) && !(defined(__clang__) && __has_feature(address_sanitizer))
+ void *operator new(size_t m)
+ {
+ #ifdef HEAPCHECK
+@@ -355,7 +356,9 @@ void *operator new(size_t m)
+          return p;   // to suppress compiler warning
+       }
+ }
++#endif
+ 
++#if !defined(__SANITIZE_ADDRESS__) && !(defined(__clang__) && __has_feature(address_sanitizer))
+ void operator delete(void *p)
+ {
+ #ifdef HEAPCHECK
+@@ -400,3 +403,4 @@ void operator delete(void *p)
+     if(id==breakat) brk("DELETE");
+ #endif
+ }
++#endif

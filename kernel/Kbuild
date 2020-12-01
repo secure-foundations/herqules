@@ -1,0 +1,4 @@
+ccflags-y := -I$(src)/../include
+
+obj-m := hq.o
+hq-objs := hq-interface.o hooks.o interface.o interface-stats.o verifier.o

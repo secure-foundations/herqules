@@ -1,0 +1,17 @@
+diff -rHu opae-intel-fpga-driver-2.0.4/drivers/fpga/intel/afu.c /usr/src/opae-intel-fpga-driver-2.0.4-2/drivers/fpga/intel/afu.c
+--- opae-intel-fpga-driver-2.0.4/drivers/fpga/intel/afu.c       2019-12-13 19:36:50.000000000 -0500
++++ /usr/src/opae-intel-fpga-driver-2.0.4-2/drivers/fpga/intel/afu.c    2020-06-02 20:45:43.000000000 -0400
+@@ -1161,7 +1167,14 @@
+        if ((vma->vm_flags & VM_WRITE) && !(region.flags & FPGA_REGION_WRITE))
+                return -EPERM;
+
++       // Prevent access to PID register at offset 0x1000
++       if ((region.phys + (offset - region.offset)) <= 0x1000 &&
++           (region.phys + (offset - region.offset)) + size > 0x1000)
++               return -EACCES;
+
+        vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+        return remap_pfn_range(vma, vma->vm_start,
+                        (region.phys + (offset - region.offset)) >> PAGE_SHIFT,
+                        size, vma->vm_page_prot);
+diff -rHu opae-intel-fpga-driver-2.0.4/drivers/fpga/intel/pcie.c /usr/src/opae-intel-fpga-driver-2.0.4-2/drivers/fpga/intel/pcie.c

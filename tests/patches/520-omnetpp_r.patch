@@ -1,0 +1,84 @@
+diff --git a/benchspec/CPU/520.omnetpp_r/src/simulator/csimulation.cc b/benchspec/CPU/520.omnetpp_r/src/simulator/csimulation.cc
+index c496d667..38feadd7 100644
+--- a/benchspec/CPU/520.omnetpp_r/src/simulator/csimulation.cc
++++ b/benchspec/CPU/520.omnetpp_r/src/simulator/csimulation.cc
+@@ -102,7 +102,7 @@ cSimulation::~cSimulation()
+ void cSimulation::setActiveSimulation(cSimulation *sim)
+ {
+     simPtr = sim;
+-    evPtr = sim==NULL ? staticEvPtr : sim->ownEvPtr;
++    evPtr = sim==NULL ? getStaticEnvir() : sim->ownEvPtr;
+ }
+ 
+ void cSimulation::setStaticEnvir(cEnvir *env)
+@@ -822,11 +822,15 @@ void StaticEnv::undisposedObject(cObject *obj)
+     }
+ }
+ 
+-static StaticEnv staticEnv;
++cEnvir *cSimulation::getStaticEnvir()  {
++    if (!staticEvPtr)
++        staticEvPtr = new StaticEnv();
++    return staticEvPtr;
++}
+ 
+ // cSimulation's global variables
+-cEnvir *cSimulation::evPtr = &staticEnv;
+-cEnvir *cSimulation::staticEvPtr = &staticEnv;
++cEnvir *cSimulation::evPtr = NULL;
++cEnvir *cSimulation::staticEvPtr = NULL;
+ 
+ cSimulation *cSimulation::simPtr = NULL;
+ 
+diff --git a/benchspec/CPU/520.omnetpp_r/src/simulator/csimulation.h b/benchspec/CPU/520.omnetpp_r/src/simulator/csimulation.h
+index 054ed211..41c16d6e 100644
+--- a/benchspec/CPU/520.omnetpp_r/src/simulator/csimulation.h
++++ b/benchspec/CPU/520.omnetpp_r/src/simulator/csimulation.h
+@@ -150,7 +150,11 @@ class SIM_API cSimulation : public cNoncopyableOwnedObject
+      * Returns the environment object for the active simulation. Never returns NULL;
+      * setActiveSimulation(NULL) will cause a static "do-nothing" instance to step in.
+      */
+-    static cEnvir *getActiveEnvir()  {return evPtr;}
++    static cEnvir *getActiveEnvir()  {
++        if (!evPtr)
++            evPtr = getStaticEnvir();
++        return evPtr;
++    }
+ 
+     /**
+      * Activate the given simulation object, and its associated environment
+@@ -168,7 +172,7 @@ class SIM_API cSimulation : public cNoncopyableOwnedObject
+     /**
+      * Returns the environment object to use when there is no active simulation object.
+      */
+-    static cEnvir *getStaticEnvir()  {return staticEvPtr;}
++    static cEnvir *getStaticEnvir();
+ 
+     /**
+      * Returns the environment object associated with this simulation object.
+diff --git a/benchspec/CPU/520.omnetpp_r/src/simulator/sectionbasedconfig.cc b/benchspec/CPU/520.omnetpp_r/src/simulator/sectionbasedconfig.cc
+index 9f1fc7c3..36b5caaa 100644
+--- a/benchspec/CPU/520.omnetpp_r/src/simulator/sectionbasedconfig.cc
++++ b/benchspec/CPU/520.omnetpp_r/src/simulator/sectionbasedconfig.cc
+@@ -1020,8 +1020,8 @@ std::vector<const char *> SectionBasedConfiguration::getMatchingConfigKeys(const
+ 
+ const char *SectionBasedConfiguration::getParameterValue(const char *moduleFullPath, const char *paramName, bool hasDefaultValue) const
+ {
+-    const SectionBasedConfiguration::KeyValue2& entry = (KeyValue2&) getParameterEntry(moduleFullPath, paramName, hasDefaultValue);
+-    return entry.getKey()==NULL ? NULL : entry.value.c_str();
++    const SectionBasedConfiguration::KeyValue& entry = getParameterEntry(moduleFullPath, paramName, hasDefaultValue);
++    return entry.getKey()==NULL ? NULL : entry.getValue();
+ }
+ 
+ const cConfiguration::KeyValue& SectionBasedConfiguration::getParameterEntry(const char *moduleFullPath, const char *paramName, bool hasDefaultValue) const
+@@ -1065,8 +1065,8 @@ std::vector<const char *> SectionBasedConfiguration::getParameterKeyValuePairs()
+ 
+ const char *SectionBasedConfiguration::getPerObjectConfigValue(const char *objectFullPath, const char *keySuffix) const
+ {
+-    const SectionBasedConfiguration::KeyValue2& entry = (KeyValue2&) getPerObjectConfigEntry(objectFullPath, keySuffix);
+-    return entry.getKey()==NULL ? NULL : entry.value.c_str();
++    const SectionBasedConfiguration::KeyValue& entry = getPerObjectConfigEntry(objectFullPath, keySuffix);
++    return entry.getKey()==NULL ? NULL : entry.getValue();
+ }
+ 
+ const cConfiguration::KeyValue& SectionBasedConfiguration::getPerObjectConfigEntry(const char *objectFullPath, const char *keySuffix) const
