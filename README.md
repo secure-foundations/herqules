@@ -215,12 +215,11 @@ Killed
 
 ### RIPE
 
-1. Set the option `HQ_INTERFACE_UNSAFE_PID` in `include/config.h`, rebuild HerQules and the instrumented C runtime library, and reload the interface. Build the attack generator as follows. Note that we repurpose the 'GCC' build as the baseline without HerQules or our CFI scheme.
+1. Build the attack generator as follows. Note that we repurpose the 'GCC' build as the baseline without HerQules or our CFI scheme.
 
 ```
 cd tests/ripe
-mkdir build
-GCC=$CLANG_NONE CLG=$CLANG_CFI GCC_CFLAGS="$CFLAGS_NONE $LDFLAGS_NONE" CLG_CFLAGS="$CFLAGS_CFI $LDFLAGS_CFI"
+GCC=$CLANG_NONE CLG=$CLANG_CFI GCC_CFLAGS="$CFLAGS_NONE" GCC_LDFLAGS="$LDFLAGS_NONE" CLG_CFLAGS="$CFLAGS_CFI" CLG_LDFLAGS="$LDFLAGS_CFI" make
 ```
 
 2. Disable ASLR:

@@ -91,3 +91,9 @@ echo "Building the simulator (HQ-CFI-SafeStack-Sim)"
 cd tests/zsim
 scons
 cd ../..
+
+echo "Building RIPE testsuite"
+cd tests/ripe
+mkdir build
+GCC=$CLANG_NONE CLG=$CLANG_CFI GCC_CFLAGS="$CFLAGS_NONE" GCC_LDFLAGS="$LDFLAGS_NONE" CLG_CFLAGS="$CFLAGS_CFI" CLG_LDFLAGS="$LDFLAGS_CFI" make
+cd ../..
