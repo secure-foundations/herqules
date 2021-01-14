@@ -524,6 +524,7 @@ static struct kretprobe notify_prctl = {
     .kp.symbol_name = "security_task_prctl",
     .handler = notify_hq_post,
     .entry_handler = notify_hq,
+    .maxactive = 2 * NR_CPUS,
 };
 
 #if defined(HQ_INTERFACE_UNSAFE_PID) ||                                        \
@@ -587,6 +588,10 @@ int kprobes_insert(void) {
 }
 
 void kprobes_remove(void) {
+    if (notify_prctl.nmissed) {
+        pr_warn("Missed calls to prctl detected!\n");
+    }
+
     unregister_kprobe(&clone_process);
 #if defined(HQ_INTERFACE_UNSAFE_PID) ||                                        \
     defined(HQ_INTERFACE_UNSAFE_PID_CONCURRENT)
