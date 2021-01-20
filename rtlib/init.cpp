@@ -30,21 +30,6 @@ tx_interface &interface = *reinterpret_cast<tx_interface *>(&buffer);
 static gs_data global_gs;
 #endif /* HQ_INTERFACE_UNSAFE_PID || HQ_INTERFACE_UNSAFE_PID_CONCURRENT */
 
-/* Helper function implementations */
-#ifdef HQ_INTERFACE_UNSAFE_BATCH
-static constexpr int SIGNALS[] = {SIGABRT, SIGFPE,  SIGILL,
-                                  SIGINT,  SIGSEGV, SIGTERM};
-static struct sigaction old_handlers[NSIG];
-
-static void signal_handler(int sig, siginfo_t *si, void *unused) {
-    interface.flush();
-
-    // Unregister and re-raise the signal handler
-    sigaction(sig, &old_handlers[sig], nullptr);
-    raise(sig);
-}
-#endif /* HQ_INTERFACE_UNSAFE_BATCH */
-
 extern "C" {
 
 /* Function implementations */
