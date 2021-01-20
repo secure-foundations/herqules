@@ -432,8 +432,7 @@ static int notify_hq(struct kretprobe_instance *ri, struct pt_regs *regs) {
         if (!verifier_is_connected()) {
             pr_warn("Cannot enable HQ for tgid %d (%s), missing verifier!\n",
                     tgid, current->comm);
-            ret = -ENODEV;
-            goto err;
+            return -ENODEV;
         }
 
         rcu_read_lock();

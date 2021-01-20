@@ -161,6 +161,8 @@ static ssize_t interface_verifier_read(struct file *fp, char *buf, size_t len,
 
     if (!verifier)
         return -ENXIO;
+    if (len < sizeof(struct hq_verifier_msg))
+        return -EINVAL;
 
     spin_lock_irqsave(&fifo_lock, flags);
 
