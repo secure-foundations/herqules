@@ -199,7 +199,7 @@ static void tracepoint_sys_enter(void *data, struct pt_regs *regs, long id) {
                 goto dead;
 
             if (!app->syscall) {
-                pr_warn("Missing system call buffer in tgid %d!\n", tgid);
+                pr_err("Missing system call buffer in tgid %d!\n", tgid);
                 goto die;
             }
 
@@ -216,8 +216,8 @@ static void tracepoint_sys_enter(void *data, struct pt_regs *regs, long id) {
             if (time_is_before_jiffies(
                     jiffies_start +
                     msecs_to_jiffies(HQ_ENFORCE_SYSCALL_HARD))) {
-                pr_warn("Reached hard threshold of %d ms in tgid %d!\n",
-                        HQ_ENFORCE_SYSCALL_HARD, tgid);
+                pr_err("Reached hard threshold of %d ms in tgid %d!\n",
+                       HQ_ENFORCE_SYSCALL_HARD, tgid);
                 goto die;
             }
 #endif /* HQ_ENFORCE_SYSCALL_HARD */
@@ -305,20 +305,20 @@ int tracepoints_insert(void) {
         for_each_kernel_tracepoint(lookup_tracepoints, NULL);
 
     if (!tp_sched_exit) {
-        pr_warn("Could not find tracepoint 'sched_process_exit'!\n");
+        pr_err("Could not find tracepoint 'sched_process_exit'!\n");
         return -ENODEV;
     }
 
 #ifdef HQ_CHECK_SYSCALL
     if (!tp_sys_enter) {
-        pr_warn("Could not find tracepoint 'sys_enter'!\n");
+        pr_err("Could not find tracepoint 'sys_enter'!\n");
         return -ENODEV;
     }
 #endif /* HQ_CHECK_SYSCALL */
 
     if ((ret = tracepoint_probe_register(tp_sched_exit, tracepoint_sched_exit,
                                          NULL))) {
-        pr_warn("Could not register tracepoint 'sched_process_exit'!\n");
+        pr_err("Could not register tracepoint 'sched_process_exit'!\n");
         tp_sched_exit = NULL;
         return ret;
     }
@@ -326,7 +326,7 @@ int tracepoints_insert(void) {
 #ifdef HQ_CHECK_SYSCALL
     if ((ret = tracepoint_probe_register(tp_sys_enter, tracepoint_sys_enter,
                                          NULL))) {
-        pr_warn("Could not register tracepoint 'sys_enter'!\n");
+        pr_err("Could not register tracepoint 'sys_enter'!\n");
         tp_sys_enter = NULL;
         return ret;
     }
@@ -339,14 +339,14 @@ void tracepoints_remove(void) {
 #ifdef HQ_CHECK_SYSCALL
     if (tp_sys_enter &&
         tracepoint_probe_unregister(tp_sys_enter, tracepoint_sys_enter, NULL)) {
-        pr_warn("Could not unregister tracepoint 'sys_enter'!\n");
+        pr_err("Could not unregister tracepoint 'sys_enter'!\n");
         return;
     }
 #endif /* HQ_CHECK_SYSCALL */
 
     if (tp_sched_exit && tracepoint_probe_unregister(
                              tp_sched_exit, tracepoint_sched_exit, NULL)) {
-        pr_warn("Could not unregister tracepoint 'sched_process_exit'!\n");
+        pr_err("Could not unregister tracepoint 'sched_process_exit'!\n");
         return;
     }
 
@@ -387,27 +387,27 @@ static int clone_copy_context(struct kprobe *kp, struct pt_regs *regs) {
                 tgid, app->name);
 
     if (!(app_clone = kmalloc(sizeof(*app_clone), GFP_KERNEL))) {
-        pr_warn("Cannot allocate context for tgid %d!\n", tgid);
+        pr_err("Cannot allocate context for tgid %d!\n", tgid);
         ret = -ENOMEM;
         goto out;
     }
 
     if ((ret = copy_hq_context(app_clone, app, ctgid))) {
-        pr_warn("Cannot copy context for tgid %d!\n", tgid);
+        pr_err("Cannot copy context for tgid %d!\n", tgid);
         kfree(app_clone);
         goto out;
     }
 
     if ((ret =
              rhashtable_insert_fast(&hq_table, &app_clone->node, hq_params))) {
-        pr_warn("Cannot insert context for tgid %d!\n", tgid);
+        pr_err("Cannot insert context for tgid %d!\n", tgid);
         free_hq_context(app_clone, (void *)1);
         goto out;
     }
 
     ret = verifier_interface_on_clone(tgid, app_clone);
     if (ret)
-        pr_warn("Cannot notify clone for tgid %d!\n", tgid);
+        pr_err("Cannot notify clone for tgid %d!\n", tgid);
 
 out:
     rcu_read_unlock();
@@ -430,8 +430,8 @@ static int notify_hq(struct kretprobe_instance *ri, struct pt_regs *regs) {
         int ret = 0;
 
         if (!verifier_is_connected()) {
-            pr_warn("Cannot enable HQ for tgid %d (%s), missing verifier!\n",
-                    tgid, current->comm);
+            pr_err("Cannot enable HQ for tgid %d (%s), missing verifier!\n",
+                   tgid, current->comm);
             return -ENODEV;
         }
 
@@ -447,8 +447,8 @@ static int notify_hq(struct kretprobe_instance *ri, struct pt_regs *regs) {
                 0
 #endif /* HQ_PRESERVE_STATS */
             ) {
-                pr_warn("Context already exists for tgid %d (%s)!\n", tgid,
-                        app->name);
+                pr_err("Context already exists for tgid %d (%s)!\n", tgid,
+                       app->name);
                 ret = -EEXIST;
                 goto err;
             } else {
@@ -458,7 +458,7 @@ static int notify_hq(struct kretprobe_instance *ri, struct pt_regs *regs) {
                 // Initialize the context
                 get_task_comm(app->name, current);
                 if ((ret = init_hq_context(app, tgid))) {
-                    pr_warn("Cannot initialize context for tgid %d!\n", tgid);
+                    pr_err("Cannot initialize context for tgid %d!\n", tgid);
                     kfree(app);
                     goto err;
                 }
@@ -466,7 +466,7 @@ static int notify_hq(struct kretprobe_instance *ri, struct pt_regs *regs) {
         } else {
             // Allocate the per-process context
             if (!(app = kmalloc(sizeof(*app), GFP_KERNEL))) {
-                pr_warn("Cannot allocate context for tgid %d!\n", tgid);
+                pr_err("Cannot allocate context for tgid %d!\n", tgid);
                 ret = -ENOMEM;
                 goto err;
             }
@@ -474,14 +474,14 @@ static int notify_hq(struct kretprobe_instance *ri, struct pt_regs *regs) {
             // Initialize the context.
             get_task_comm(app->name, current);
             if ((ret = init_hq_context(app, tgid))) {
-                pr_warn("Cannot initialize context for tgid %d!\n", tgid);
+                pr_err("Cannot initialize context for tgid %d!\n", tgid);
                 kfree(app);
                 goto err;
             }
 
             // Insert the context into the hashtable
             if (rhashtable_insert_fast(&hq_table, &app->node, hq_params)) {
-                pr_warn("Cannot insert context for tgid %d!\n", tgid);
+                pr_err("Cannot insert context for tgid %d!\n", tgid);
                 free_hq_context(app, (void *)1);
                 goto lookup;
             }
@@ -501,7 +501,7 @@ static int notify_hq(struct kretprobe_instance *ri, struct pt_regs *regs) {
 
         // Send the syscall buffer to userspace verifier
         if ((ret = verifier_interface_notify(tgid, app)))
-            pr_warn("Cannot notify context for tgid %d!\n", tgid);
+            pr_err("Cannot notify context for tgid %d!\n", tgid);
 
     err:
         rcu_read_unlock();
@@ -563,23 +563,23 @@ int kprobes_insert(void) {
     int ret = 0;
 
     if ((ret = register_kprobe(&clone_process))) {
-        pr_warn("Could not find kprobe symbol '%s'!\n",
-                clone_process.symbol_name);
+        pr_err("Could not find kprobe symbol '%s'!\n",
+               clone_process.symbol_name);
         return ret;
     }
 
 #if defined(HQ_INTERFACE_UNSAFE_PID) ||                                        \
     defined(HQ_INTERFACE_UNSAFE_PID_CONCURRENT)
     if ((ret = register_kprobe(&notify_arch_prctl))) {
-        pr_warn("Could not find kprobe symbol '%s'!\n",
-                notify_arch_prctl.symbol_name);
+        pr_err("Could not find kprobe symbol '%s'!\n",
+               notify_arch_prctl.symbol_name);
         return ret;
     }
 #endif /* HQ_INTERFACE_UNSAFE_PID || HQ_INTERFACE_UNSAFE_PID_CONCURRENT */
 
     if ((ret = register_kretprobe(&notify_prctl))) {
-        pr_warn("Could not find kretprobe symbol '%s'!\n",
-                notify_prctl.kp.symbol_name);
+        pr_err("Could not find kretprobe symbol '%s'!\n",
+               notify_prctl.kp.symbol_name);
         return ret;
     }
 
@@ -587,9 +587,8 @@ int kprobes_insert(void) {
 }
 
 void kprobes_remove(void) {
-    if (notify_prctl.nmissed) {
+    if (notify_prctl.nmissed)
         pr_warn("Missed calls to prctl detected!\n");
-    }
 
     unregister_kprobe(&clone_process);
 #if defined(HQ_INTERFACE_UNSAFE_PID) ||                                        \
