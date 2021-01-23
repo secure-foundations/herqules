@@ -81,8 +81,6 @@ std::ostream &operator<<(std::ostream &os, const volatile hq_msg &msg) {
     return os;
 }
 
-void Process::clear_entries() { entries.clear(); }
-
 bool Process::parse_msg(const pid_t pid, const volatile struct hq_msg &msg) {
 #ifdef HQ_PRESERVE_STATS
     if (dead)
@@ -357,18 +355,6 @@ bool Process::parse_msg(const pid_t pid, const volatile struct hq_msg &msg) {
 
     return false;
 }
-
-#ifdef HQ_PRESERVE_STATS
-bool Process::is_dead() const { return dead; }
-
-void Process::set_dead() { dead = true; }
-#endif /* HQ_PRESERVE_STATS */
-
-void Process::set_syscall(struct hq_syscall *s) { syscall = s; }
-
-const std::string &Process::get_name() const { return name; }
-
-unsigned Process::get_stat(enum hq_stats stat) const { return stats.at(stat); }
 
 std::ostream &operator<<(std::ostream &os,
                          const std::pair<const pid_t, Process> &p) {

@@ -218,10 +218,8 @@ template <typename V, typename RX> class Verifier {
                 std::cout << "PID: " << std::dec << it->first << " ("
                           << it->second.get_name() << ") exited!\n"
                           << *it << std::endl;
-#ifdef HQ_PRESERVE_STATS
-                it->second.clear_entries();
-                it->second.set_dead();
-#else
+                it->second.cleanup();
+#ifndef HQ_PRESERVE_STATS
                 processes.erase(it);
                 if (previous == it)
                     previous = processes.end();
@@ -254,20 +252,15 @@ template <typename V, typename RX> class Verifier {
     }
 
     static bool kill_process(iterator it) {
-#ifdef HQ_ENFORCE_CHECKS
-        if (it->first <= 0)
-            return false;
+        it->second.cleanup();
 
+#ifdef HQ_ENFORCE_CHECKS
         std::cout << "PID: " << std::dec << it->first << " ("
                   << it->second.get_name() << ") killing..." << std::endl;
         if (kill(it->first, SIGKILL) && errno != ESRCH)
             return false;
-
-#ifdef HQ_PRESERVE_STATS
-        it->second.clear_entries();
-        it->second.set_dead();
-#endif /* HQ_PRESERVE_STATS */
 #endif /* HQ_ENFORCE_CHECKS */
+
         return true;
     }
 

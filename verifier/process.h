@@ -12,6 +12,7 @@
 #include "absl/container/btree_map.h"
 
 #include "config.h"
+#include "interfaces-verifier.h"
 #include "messages-verifier.h"
 #include "messages.h"
 #include "stats.h"
@@ -34,10 +35,7 @@ class Process {
   public:
     Process(std::string &&s) : name(s) {}
 
-    ~Process() {
-        if (syscall)
-            munmap(const_cast<struct hq_syscall *>(syscall), SYSCALL_MAP_SIZE);
-    }
+    ~Process() { cleanup(); }
 
     Process(const Process &other) : name(other.name), entries(other.entries) {}
 
@@ -60,17 +58,33 @@ class Process {
         return *this;
     }
 
+    void cleanup() {
+        if (syscall) {
+            verifier_interface::unmap(syscall);
+            syscall = nullptr;
+        }
+
 #ifdef HQ_PRESERVE_STATS
-    bool is_dead() const;
-    void set_dead();
+        clear_entries();
+        set_dead();
+#endif /* HQ_PRESERVE_STATS */
+    }
+
+#ifdef HQ_PRESERVE_STATS
+    bool is_dead() const { return dead; }
+    void set_dead() { dead = true; }
 #endif /* HQ_PRESERVE_STATS */
 
-    void clear_entries();
+    void clear_entries() { entries.clear(); }
     bool parse_msg(const pid_t pid, const volatile struct hq_msg &);
-    void set_syscall(struct hq_syscall *);
 
-    const std::string &get_name() const;
-    unsigned get_stat(enum hq_stats) const;
+    struct hq_syscall *get_syscall() const {
+        return syscall;
+    }
+    void set_syscall(struct hq_syscall *s) { syscall = s; }
+
+    const std::string get_name() const { return name; }
+    unsigned get_stat(enum hq_stats stat) const { return stats.at(stat); }
 
     friend std::ostream &operator<<(std::ostream &,
                                     const std::pair<const pid_t, Process> &);

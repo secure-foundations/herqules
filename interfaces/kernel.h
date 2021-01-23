@@ -95,6 +95,10 @@ class Verifier {
         return &msgs[readn / sizeof(msgs[0])];
     }
 
+    static void unmap(void *map) {
+        munmap(map, SYSCALL_MAP_SIZE);
+    }
+
     bool get_notify() const {
         if (__builtin_expect(!notify, 0))
             return true;
