@@ -257,7 +257,7 @@ template <typename V, typename RX> class Verifier {
 #ifdef HQ_ENFORCE_CHECKS
         std::cout << "PID: " << std::dec << it->first << " ("
                   << it->second.get_name() << ") killing..." << std::endl;
-        if (kill(it->first, SIGKILL) && errno != ESRCH)
+        if (kill(it->first, HQ_KILL_SIGNAL) && errno != ESRCH)
             return false;
 #endif /* HQ_ENFORCE_CHECKS */
 

@@ -244,7 +244,7 @@ static void tracepoint_sys_enter(void *data, struct pt_regs *regs, long id) {
     die:
 #ifdef HQ_ENFORCE_CHECKS
         pr_warn("Killing tgid %d (%s)!\n", tgid, app->name);
-        send_sig(SIGKILL, current, 1);
+        send_sig(HQ_KILL_SIGNAL, current, 1);
 #endif /* HQ_ENFORCE_CHECKS */
     dead:
         atomic_inc(&app->stats[HQ_STAT_NUM_FAILS]);

@@ -54,6 +54,9 @@
 /* Whether to kill the application when a check fails */
 #define HQ_ENFORCE_CHECKS
 
+/* Signal to send when killing an application */
+#define HQ_KILL_SIGNAL SIGKILL
+
 /* Whether to kill the application when the system call wait has exceeded a hard
  * threshold, and if so, the threshold in milliseconds */
 #define HQ_ENFORCE_SYSCALL_HARD 2000
