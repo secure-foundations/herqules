@@ -211,13 +211,19 @@ static void tracepoint_sys_enter(void *data, struct pt_regs *regs, long id) {
                 goto out;
             }
 
+            if (id == __NR_exit || id == __NR_exit_group) {
+                // Always allow exit without checking
+                goto out;
+            }
+
 #ifdef HQ_ENFORCE_SYSCALL_HARD
             // Kill if hard threshold exceeded
             if (time_is_before_jiffies(
                     jiffies_start +
                     msecs_to_jiffies(HQ_ENFORCE_SYSCALL_HARD))) {
-                pr_err("Reached hard threshold of %d ms in tgid %d!\n",
-                       HQ_ENFORCE_SYSCALL_HARD, tgid);
+                pr_err("Reached hard threshold of %d ms on syscall %ld in tgid "
+                       "%d!\n",
+                       HQ_ENFORCE_SYSCALL_HARD, id, tgid);
                 goto die;
             }
 #endif /* HQ_ENFORCE_SYSCALL_HARD */
