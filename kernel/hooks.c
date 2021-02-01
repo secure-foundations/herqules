@@ -33,7 +33,7 @@
 /* Tracepoints */
 // FIXME: For HQ_INTERFACE_UNSAFE_PID_CONCURRENT, need to update PID when about
 // to be scheduled (e.g. signals)
-static struct tracepoint *tp_sched_exit = NULL
+static struct tracepoint *tp_sched_free = NULL
 #ifdef HQ_CHECK_SYSCALL
     ,
                          *tp_sys_enter = NULL
@@ -97,7 +97,7 @@ static inline void regs_set_return_value(struct pt_regs *regs,
 }
 #endif /* LINUX_VERSION_CODE */
 
-static void tracepoint_sched_exit(void *data, struct task_struct *task) {
+static void tracepoint_sched_free(void *data, struct task_struct *task) {
     struct hq_ctx *app;
     pid_t tgid;
 
@@ -263,8 +263,8 @@ out:
 
 // Tracepoints are not exported, must search through list
 static void lookup_tracepoints(struct tracepoint *tp, void *ignore) {
-    if (!tp_sched_exit && !strcmp("sched_process_exit", tp->name))
-        tp_sched_exit = tp;
+    if (!tp_sched_free && !strcmp("sched_process_free", tp->name))
+        tp_sched_free = tp;
 #ifdef HQ_CHECK_SYSCALL
     else if (!tp_sys_enter && !strcmp("sys_enter", tp->name))
         tp_sys_enter = tp;
@@ -303,15 +303,15 @@ static int match_fpga_port(struct device *dev, const void *data) {
 int tracepoints_insert(void) {
     int ret;
 
-    if (!tp_sched_exit
+    if (!tp_sched_free
 #ifdef HQ_CHECK_SYSCALL
         || !tp_sys_enter
 #endif /* HQ_CHECK_SYSCALL */
     )
         for_each_kernel_tracepoint(lookup_tracepoints, NULL);
 
-    if (!tp_sched_exit) {
-        pr_err("Could not find tracepoint 'sched_process_exit'!\n");
+    if (!tp_sched_free) {
+        pr_err("Could not find tracepoint 'sched_process_free'!\n");
         return -ENODEV;
     }
 
@@ -322,10 +322,10 @@ int tracepoints_insert(void) {
     }
 #endif /* HQ_CHECK_SYSCALL */
 
-    if ((ret = tracepoint_probe_register(tp_sched_exit, tracepoint_sched_exit,
+    if ((ret = tracepoint_probe_register(tp_sched_free, tracepoint_sched_free,
                                          NULL))) {
-        pr_err("Could not register tracepoint 'sched_process_exit'!\n");
-        tp_sched_exit = NULL;
+        pr_err("Could not register tracepoint 'sched_process_free'!\n");
+        tp_sched_free = NULL;
         return ret;
     }
 
@@ -350,9 +350,9 @@ void tracepoints_remove(void) {
     }
 #endif /* HQ_CHECK_SYSCALL */
 
-    if (tp_sched_exit && tracepoint_probe_unregister(
-                             tp_sched_exit, tracepoint_sched_exit, NULL)) {
-        pr_err("Could not unregister tracepoint 'sched_process_exit'!\n");
+    if (tp_sched_free && tracepoint_probe_unregister(
+                             tp_sched_free, tracepoint_sched_free, NULL)) {
+        pr_err("Could not unregister tracepoint 'sched_process_free'!\n");
         return;
     }
 
