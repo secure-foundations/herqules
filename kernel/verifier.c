@@ -7,6 +7,7 @@
 #include <linux/sched/signal.h>
 #include <linux/signal.h>
 #include <linux/slab.h>
+#include <linux/wait.h>
 
 #include <asm/pgtable.h>
 
@@ -40,6 +41,9 @@ const struct vm_operations_struct verifier_vma_ops = {
 };
 #endif /* CONFIG_HAVE_IOREMAP_PROT */
 
+// Waitqueue for messages that must be delivered before resuming
+DECLARE_WAIT_QUEUE_HEAD(wq);
+
 // Notify page for the verifier
 static struct hq_verifier_notify *verifier;
 
@@ -52,9 +56,9 @@ DEFINE_KFIFO(map_fifo, void *, VERIFIER_MSG_FIFO_SIZE);
 // between both queues
 DEFINE_SPINLOCK(fifo_lock);
 
-static int send_message(struct hq_verifier_msg *msg, void *ptr, bool spin) {
+static int send_message(struct hq_verifier_msg *msg, void *ptr, bool wait) {
     int ret = 0;
-    unsigned long flags, sleep = 1;
+    unsigned long flags;
 
     if (!verifier)
         return -ENODEV;
@@ -75,22 +79,10 @@ static int send_message(struct hq_verifier_msg *msg, void *ptr, bool spin) {
 out:
     spin_unlock_irqrestore(&fifo_lock, flags);
 
-    if (!ret && spin) {
-        // Make sure the verifier has read the notification, so that subsequent
-        // application messages are parsed correctly
-        while (!kfifo_is_empty(&msg_fifo)) {
-            barrier();
-
-            if (!verifier)
-                return -ENODEV;
-            if (!pid_alive(current) || fatal_signal_pending(current))
-                return -ESRCH;
-
-            mdelay(sleep);
-            if (sleep < HQ_SYSCALL_SLEEP_MAX)
-                sleep *= HQ_SYSCALL_SLEEP_MULTIPLIER;
-            else
-                sleep = HQ_SYSCALL_SLEEP_MAX;
+    if (!ret && wait) {
+        // Ignore return value; handle killed processes normally
+        if (wait_event_killable(wq, kfifo_is_empty(&msg_fifo))) {
+            pr_warn("Interrupted by signal in tgid %d!\n", msg->pid);
         }
     }
 
@@ -157,7 +149,7 @@ static ssize_t interface_verifier_read(struct file *fp, char *buf, size_t len,
                                        loff_t *off) {
     int ret;
     unsigned long flags;
-    unsigned int copied;
+    unsigned int copied, rem;
 
     if (!verifier)
         return -ENXIO;
@@ -167,9 +159,12 @@ static ssize_t interface_verifier_read(struct file *fp, char *buf, size_t len,
     spin_lock_irqsave(&fifo_lock, flags);
 
     ret = kfifo_to_user(&msg_fifo, buf, len, &copied);
-    atomic_set((atomic_t *)&verifier->pending, kfifo_len(&msg_fifo));
+    rem = kfifo_len(&msg_fifo);
+    atomic_set((atomic_t *)&verifier->pending, rem);
 
     spin_unlock_irqrestore(&fifo_lock, flags);
+    if (!rem)
+        wake_up(&wq);
     return ret ? ret : copied;
 }
 
@@ -266,5 +261,6 @@ static int interface_verifier_release(struct inode *ip, struct file *fp) {
     rhashtable_walk_stop(&iter);
     rhashtable_walk_exit(&iter);
 
+    wake_up(&wq);
     return 0;
 }
