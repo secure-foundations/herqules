@@ -233,13 +233,13 @@ static void tracepoint_sys_enter(void *data, struct pt_regs *regs, long id) {
                     jiffies_start + msecs_to_jiffies(HQ_SYSCALL_THRESHOLD))) {
                 after = 1;
 
-                pr_info_ratelimited("Waiting on syscall %ld for %d ms in "
-                                    "context tgid %d (%s)!\n",
-                                    id,
-                                    jiffies_to_msecs(jiffies - jiffies_start),
-                                    tgid, app->name);
-
                 if (sleep < HQ_SYSCALL_SLEEP_MAX) {
+                    pr_info_ratelimited(
+                        "Waiting on syscall %ld for %d ms in "
+                        "context tgid %d (%s)!\n",
+                        id, jiffies_to_msecs(jiffies - jiffies_start), tgid,
+                        app->name);
+
                     usleep_range(sleep * 500, sleep * 1000);
                     sleep *= HQ_SYSCALL_SLEEP_MULTIPLIER;
                 } else
