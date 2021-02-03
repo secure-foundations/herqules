@@ -144,10 +144,8 @@ static void tracepoint_sys_enter(void *data, struct pt_regs *regs, long id) {
 
 #ifdef HQ_UNSAFE_COMPAT_RR
         // When running under rr, it may inject psuedo-syscalls with number
-        // greater than or equal to RR_CALL_BASE (1000). Additionally, it may
-        // modify the vDSO to perform system calls, so whitelist these too.
-        if (id >= 1000 || id == __NR_clock_getres || id == __NR_clock_gettime ||
-            id == __NR_getcpu || id == __NR_gettimeofday || id == __NR_time) {
+        // greater than or equal to RR_CALL_BASE (1000).
+        if (id >= 1000) {
             pr_info_ratelimited(
                 "Allowing rr system call %ld in context tgid %d (%s)!\n", id,
                 tgid, app->name);
@@ -211,8 +209,13 @@ static void tracepoint_sys_enter(void *data, struct pt_regs *regs, long id) {
                 goto out;
             }
 
-            if (id == __NR_exit || id == __NR_exit_group) {
-                // Always allow exit without checking
+            if (id == __NR_exit || id == __NR_exit_group
+#ifdef CONFIG_X86_64
+                || id == __NR_clock_getres || id == __NR_clock_gettime ||
+                id == __NR_getcpu || id == __NR_gettimeofday || id == __NR_time
+#endif
+            ) {
+                // Always allow exit and vDSO functions without checking
                 goto out;
             }
 
