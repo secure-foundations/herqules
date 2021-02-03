@@ -49,7 +49,7 @@ int init_hq_context(struct hq_ctx *ctx, pid_t tgid) {
 #ifdef HQ_CHECK_SYSCALL
     // Allocate aligned page(s)
     ctx->syscall = (struct hq_syscall *)__get_free_pages(
-        GFP_KERNEL, get_order(SYSCALL_MAP_SIZE));
+        GFP_KERNEL | __GFP_ZERO, get_order(SYSCALL_MAP_SIZE));
 #endif /* HQ_CHECK_SYSCALL */
 
     memset(ctx->stats, 0, sizeof(*ctx->stats));
