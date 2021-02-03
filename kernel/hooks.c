@@ -209,13 +209,15 @@ static void tracepoint_sys_enter(void *data, struct pt_regs *regs, long id) {
                 goto out;
             }
 
-            if (id == __NR_exit || id == __NR_exit_group
+            if (id == __NR_rt_sigreturn || id == __NR_restart_syscall ||
+                id == __NR_exit || id == __NR_exit_group
 #ifdef CONFIG_X86_64
                 || id == __NR_clock_getres || id == __NR_clock_gettime ||
                 id == __NR_getcpu || id == __NR_gettimeofday || id == __NR_time
 #endif
             ) {
-                // Always allow exit and vDSO functions without checking
+                // Always allow exit, restart on signal, and vDSO system calls
+                // without checking
                 goto out;
             }
 
