@@ -75,43 +75,39 @@ class StaticInitializer {
 static StaticInitializer Initializer;
 
 extern "C" PassPluginLibraryInfo LLVM_ATTRIBUTE_WEAK llvmGetPassPluginInfo() {
-    return {
-        LLVM_PLUGIN_API_VERSION, TEST_PLUGIN_NAME, TEST_PLUGIN_VERSION,
-        [](PassBuilder &PB) {
-            PB.registerPipelineParsingCallback(
-                [](StringRef Name, ModulePassManager &MPM,
-                   ArrayRef<PassBuilder::PipelineElement> InnerPipeline) {
-                    if (Name.equals("cfi-finalize")) {
+    return {LLVM_PLUGIN_API_VERSION, TEST_PLUGIN_NAME, TEST_PLUGIN_VERSION,
+            [](PassBuilder &PB) {
+                PB.registerPipelineParsingCallback(
+                    [](StringRef Name, ModulePassManager &MPM,
+                       ArrayRef<PassBuilder::PipelineElement> InnerPipeline) {
+                        if (Name.equals("cfi-finalize")) {
+                            CFIFinalizePass::create(MPM);
+                            return true;
+                        } else if (Name.equals("cfi-instrument")) {
+                            CFIInstrumentPass::create(MPM);
+                            return true;
+                        } else if (Name.equals("hq-syscall")) {
+                            HQSyscallPass::create(MPM);
+                            return true;
+                        }
+
+                        return false;
+                    });
+
+                PB.registerPipelineStartEPCallback([](ModulePassManager &MPM) {
+                    CFIInstrumentPass::create(MPM);
+                });
+
+                PB.registerPipelineStartEPCallback(
+                    [](ModulePassManager &MPM) { HQSyscallPass::create(MPM); });
+
+                PB.registerOptimizerLastEPCallback(
+                    [](ModulePassManager &MPM,
+                       PassBuilder::OptimizationLevel Level) {
                         CFIFinalizePass::create(MPM);
-                        return true;
-                    } else if (Name.equals("cfi-instrument")) {
-                        CFIInstrumentPass::create(MPM);
-                        return true;
-                    } else if (Name.equals("hq-syscall")) {
-                        HQSyscallPass::create(MPM);
-                        return true;
-                    }
+                    });
 
-                    return false;
-                });
-
-            PB.registerPipelineStartEPCallback(
-                [](ModulePassManager &MPM) { CFIInstrumentPass::create(MPM); });
-
-            PB.registerPipelineStartEPCallback(
-                [](ModulePassManager &MPM) { HQSyscallPass::create(MPM); });
-
-            // FIXME: Need to run finalize pass at OptimizerLastEPCallback,
-            // but new pass manager doesn't support a ModulePass there
-            PB.registerOptimizerLastEPCallback(
-                [](FunctionPassManager &FPM,
-                   PassBuilder::OptimizationLevel Level) {
-                    report_fatal_error(
-                        "No suitable callbacks for CFI finalization pass with "
-                        "new pass manager!");
-                });
-
-            // FIXME: Need to run instrument and finalize pass at LTO
-            // callback, but new pass manager doesn't have LTO callbacks
-        }};
+                // FIXME: Need to run instrument and finalize pass at LTO
+                // callback, but new pass manager doesn't have LTO callbacks
+            }};
 }

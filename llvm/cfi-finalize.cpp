@@ -446,7 +446,7 @@ class CallPaths {
                         ParentCallSites.emplace();
                     assert(C.first.pointsToAliveValue() &&
                            "Value handle must be valid!");
-                    ParentCallSites->insert(&cast<CallBase>(*C.first));
+                    ParentCallSites->insert(cast<CallBase>(&**C.first));
                 }
 
                 // Count the total number of calls to the child from the parent
@@ -549,7 +549,7 @@ class CallPaths {
 // FIXME: Brittle instruction matching
 static StoreInst *getInstrumentedStore(CallBase &D, const Value *A0,
                                        const Value *A1, bool &hasMultiple) {
-    const Value *CV = D.getCalledValue();
+    const Value *CV = D.getCalledOperand();
     DedupVector<std::pair<Instruction *, const Value *>, 4> Stack;
 
     Stack.push_back(std::make_pair(D.getPrevNode(), A0));
@@ -568,7 +568,7 @@ static StoreInst *getInstrumentedStore(CallBase &D, const Value *A0,
                 }
             } else if (auto *CB = dyn_cast<CallBase>(I)) {
                 // Avoid overlapping with another define
-                if (CB->getCalledValue() == CV)
+                if (CB->getCalledOperand() == CV)
                     break;
             } else if (auto *PN = dyn_cast<PHINode>(I)) {
                 if (PN == P) {

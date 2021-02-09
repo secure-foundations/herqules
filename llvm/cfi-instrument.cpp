@@ -118,7 +118,7 @@ static CallBase *getCheckedCall(IntrinsicInst &II) {
 /* Helper functions */
 // Given a checked call, determine if it can be optimized out
 static Value *optimizeCheckedCall(CallBase &CB) {
-    Value *V = const_cast<Value *>(simplify(CB.getCalledValue()));
+    Value *V = const_cast<Value *>(simplify(CB.getCalledOperand()));
 
     // Direct function call
     if (auto *F = dyn_cast<Function>(V))
