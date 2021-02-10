@@ -338,7 +338,7 @@ static bool isRemovableInvalidate(
                     } else if (F) {
                         const Optional<std::string> Name =
                             getDemangledName(F->getName());
-                        if (Name && isConstructor(*Name)) {
+                        if (Name && isConstructor(F->getName())) {
                             // A constructor is called on the object
                             return false;
                         }
@@ -444,7 +444,7 @@ class CallPaths {
                 if (CS && GN == CGN) {
                     if (!ParentCallSites)
                         ParentCallSites.emplace();
-                    assert(C.first.pointsToAliveValue() &&
+                    assert(C.first->pointsToAliveValue() &&
                            "Value handle must be valid!");
                     ParentCallSites->insert(cast<CallBase>(&**C.first));
                 }

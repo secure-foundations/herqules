@@ -11,7 +11,6 @@
 #include "llvm/Linker/Linker.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/Process.h"
-#include "llvm/Support/Regex.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Utils/ModuleUtils.h"
 
@@ -777,18 +776,11 @@ const Optional<std::string> getDemangledName(const StringRef Name) {
                              : Optional<std::string>();
 }
 
-bool isConstructor(const std::string &Demangled) {
-    std::string Error;
-    static constexpr char RegEx[] =
-        "([a-zA-Z0-9_]+)(<[a-zA-Z0-9_<>, :]+>)*::\\1\\(";
-#if LLVM_VERSION_MAJOR >= 10
-    const Regex ConstructorRegex(RegEx);
-    return ConstructorRegex.match(Demangled, nullptr, &Error);
-#else
-    Regex ConstructorRegex(RegEx);
-    assert(ConstructorRegex.isValid(Error) && "Invalid constructor regex!");
-    return ConstructorRegex.match(Demangled);
-#endif /* LLVM_VERSION_MAJOR */
+bool isConstructor(const StringRef Name) {
+    // Constructor returning void: <ctor-dtor-name>
+    return Name.endswith("Ev") &&
+           (Name.contains("C1") || Name.contains("C2") || Name.contains("C3") ||
+            Name.contains("CI1") || Name.contains("CI2"));
 }
 
 // FIXME: Super hacky Itanium-specific ABI matching
@@ -797,8 +789,10 @@ bool isNonBaseConstructor(const StringRef Name) {
            (Name.contains("C1E") || Name.contains("C3E"));
 }
 
-bool isDestructor(const std::string &Demangled) {
-    return Demangled.find("::~") != std::string::npos;
+bool isDestructor(const StringRef Name) {
+    // Destructor returning void: <ctor-dtor-name>
+    return Name.endswith("D0Ev") || Name.endswith("D1Ev") ||
+           Name.endswith("D2Ev");
 }
 
 // FIXME: Super hacky Itanium-specific ABI matching

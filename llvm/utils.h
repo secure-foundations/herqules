@@ -182,19 +182,19 @@ const StringRef getDeletedVirtualName();
 // Get the name of the C++ allocation function for exceptions
 const StringRef getAllocateExceptionName();
 
-// Compute the optional demangled C++ symbol name from a string
+// Get the optional demangled C++ symbol name from a string
 const Optional<std::string> getDemangledName(const StringRef Name);
 
-// Determine if a demangled C++ symbol is a constructor
-bool isConstructor(const std::string &Demangled);
+// Determine if a C++ symbol is a constructor
+bool isConstructor(const StringRef Name);
 
-// Determine if the constructor is complete
+// Determine if a C++ constructor is complete
 bool isNonBaseConstructor(const StringRef Name);
 
-// Determine if a demangled C++ symbol is a destructor
-bool isDestructor(const std::string &Demangled);
+// Determine if a C++ symbol is a destructor
+bool isDestructor(const StringRef Name);
 
-// Determine if the destructor is complete or deleting
+// Determine if a C++ destructor is complete or deleting
 bool isNonBaseDestructor(const StringRef Name);
 
 // Determine if a demangled C++ symbol is a typeinfo

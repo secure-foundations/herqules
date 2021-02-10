@@ -446,8 +446,8 @@ struct InstrumentVisitor : public InstVisitor<InstrumentVisitor> {
     void visitFunction(Function &F) {
         auto Name = getDemangledName(F.getName());
         currentFunc = &F;
-        isConstructorFunc = Name ? isConstructor(*Name) : false;
-        isDestructorFunc = Name ? isDestructor(*Name) : false;
+        isConstructorFunc = Name && isConstructor(F.getName());
+        isDestructorFunc = Name && isDestructor(F.getName());
         assert(!(isConstructorFunc && isDestructorFunc) &&
                "Function cannot be constructor and destructor!");
         NoStrictType =
