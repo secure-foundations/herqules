@@ -169,7 +169,7 @@ sudo ./verifier/verifier
 export OPT+=" -fstrict-vtable-pointers -fforce-emit-vtables -fvirtual-function-elimination -fwhole-program-vtables"
 
 export CFLAGS_NONE+=" --target=x86_64-pc-linux-musl --sysroot=/opt/cross-none --gcc-toolchain=/opt/cross-none -flto -fvisibility=hidden"
-export LDFLAGS_NONE+=" -Wl,-z,now -Wl,-z,relro --target=x86_64-pc-linux-musl --sysroot=/opt/cross-none --gcc-toolchain=/opt/cross-none -flto -fuse-ld=gold -Wl,-I,/lib/ld-musl-none-x86_64.so.1"
+export LDFLAGS_NONE+=" -Wl,-z,now -Wl,-z,relro --target=x86_64-pc-linux-musl --sysroot=/opt/cross-none --gcc-toolchain=/opt/cross-none -flto -fuse-ld=gold -Wl,--dynamic-linker=/lib/ld-musl-none-x86_64.so.1"
 
 export CFLAGS_CFI+=" -flto -fvisibility=hidden -fsanitize=cfi-nvcall,cfi-vcall,cfi-icall,cfi-mfcall,safe-stack"
 export LDFLAGS_CFI+=" -flto -fuse-ld=gold -fsanitize=safe-stack"
