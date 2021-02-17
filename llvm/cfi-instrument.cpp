@@ -64,10 +64,10 @@ STATISTIC(NumFPInv, "Number of instrumented function pointer invalidations");
 STATISTIC(NumChk, "Number of instrumented pointer checks");
 STATISTIC(NumOptChk, "Number of pointer checks optimized away");
 STATISTIC(NumFnAttr, "Number of applied memory function attributes");
-STATISTIC(NumMustRedir, "Number of early function redirections");
+STATISTIC(NumEarlyLib, "Number of early functions instrumented/redirected");
 #else
 static unsigned int NumVTDef = 0, NumVTInv = 0, NumFPDef = 0, NumFPInv = 0,
-                    NumChk = 0, NumOptChk = 0, NumFnAttr = 0, NumMustRedir = 0;
+                    NumChk = 0, NumOptChk = 0, NumFnAttr = 0, NumEarlyLib = 0;
 #endif /* !NDEBUG || LLVM_ENABLE_STATS */
 
 /* Types */
@@ -451,7 +451,7 @@ struct InstrumentVisitor : public InstVisitor<InstrumentVisitor> {
         assert(!(isConstructorFunc && isDestructorFunc) &&
                "Function cannot be constructor and destructor!");
         NoStrictType =
-            UseStrictFP && SPECOverrides && RedirectFunctions
+            UseStrictFP && SPECOverrides && LibraryFunctions
                 ? getSPECNoStrictFP(F.getParent()->getModuleIdentifier(),
                                     F.getName())
                 : MemFnType::Unknown;
@@ -703,7 +703,7 @@ struct InstrumentVisitor : public InstVisitor<InstrumentVisitor> {
         if (F == RF && NoStrictType == MemFnType::Realloc) {
             assert(CB.getFunctionType() == PRF.getFunctionType());
             CB.setCalledFunction(PRF);
-            ++NumMustRedir;
+            ++NumEarlyLib;
             return;
         }
 
@@ -819,7 +819,7 @@ struct InstrumentVisitor : public InstVisitor<InstrumentVisitor> {
                 IRB.SetInsertPoint(&II);
                 Value *Args[] = {A0, A1, A2};
                 createCastedCall(IRB, PMCF, Args);
-                ++NumMustRedir;
+                ++NumEarlyLib;
             }
             break;
         }
@@ -882,16 +882,17 @@ static bool createCFIInstrumentation(bool LowerOnly, DTCallback DCB,
     IV.visit(M);
 
     bool Changed = NumFPDef || NumFPInv || NumVTDef || NumVTInv || NumChk ||
-                   NumOptChk || NumFnAttr || NumMustRedir;
+                   NumOptChk || NumFnAttr || NumEarlyLib;
     if (Changed) {
         outs() << M.getName() << ": Instrumented function pointers ("
                << NumFPDef << " defines, " << NumFPInv
                << " invalidates), vtable pointers (" << NumVTDef << " defines, "
                << NumVTInv << " invalidates), checks (" << NumChk
                << " created, " << NumOptChk << " optimized); ";
-        if (RedirectFunctions && NumMustRedir)
-            outs() << NumMustRedir << " redirected functions; ";
-        if (SPECOverrides && NumFnAttr)
+        if (NumEarlyLib)
+            outs() << NumEarlyLib
+                   << " instrumented/redirected library functions; ";
+        if (NumFnAttr)
             outs() << NumFnAttr << " function attributes";
         outs() << "\n";
 

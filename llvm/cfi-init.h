@@ -6,7 +6,7 @@
 #include <string>
 
 // Shared configuration flags
-extern llvm::cl::opt<bool> CFIDominatorAnalysis, RedirectFunctions, RunCFI,
+extern llvm::cl::opt<bool> CFIDominatorAnalysis, LibraryFunctions, RunCFI,
     UseStrictFP;
 
 extern llvm::cl::opt<std::string> InlinePath;

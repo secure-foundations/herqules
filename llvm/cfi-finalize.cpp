@@ -88,16 +88,15 @@ STATISTIC(NumOptChk, "Number of pointer checks optimized away");
 STATISTIC(NumChkInv, "Number of optimized pointer check-invalidates");
 STATISTIC(NumOptInv, "Number of pointer invalidates optimized away");
 STATISTIC(NumRecGuards, "Number of created recursion guards");
-STATISTIC(NumCopyMove, "Number of pointer copies/moves");
-STATISTIC(NumFree, "Number of pointer frees");
+STATISTIC(NumCopy, "Number of pointer copies");
+STATISTIC(NumMoveFree, "Number of pointer moves/frees");
 STATISTIC(NumRetDefs, "Number of return pointer defines");
 STATISTIC(NumRetChks, "Number of return pointer checks");
 #else
 static unsigned int NumVTGlobal = 0, NumFPGlobal = 0, NumIntGlobal = 0,
                     NumExtGlobal = 0, NumOptDef = 0, NumOptChk = 0,
-                    NumChkInv = 0, NumOptInv = 0, NumRecGuards = 0,
-                    NumCopyMove = 0, NumFree = 0, NumRetDefs = 0,
-                    NumRetChks = 0;
+                    NumChkInv = 0, NumOptInv = 0, NumRecGuards = 0, NumCopy = 0,
+                    NumMoveFree = 0, NumRetDefs = 0, NumRetChks = 0;
 #endif /* !NDEBUG || LLVM_ENABLE_STATS */
 
 /* Types */
@@ -1375,7 +1374,7 @@ struct FinalizeVisitor : public InstVisitor<FinalizeVisitor> {
         createHQFunctions(IRB, M, &PCF, &PCIF, &PDF, &PIF, nullptr, &PMCF,
                           &PMMF, &PFF, &PRF);
 
-        if (RunCFI && RedirectFunctions) {
+        if (RunCFI && LibraryFunctions) {
             FF = M.getFunction("free");
             RF = M.getFunction("realloc");
         }
@@ -1668,12 +1667,12 @@ struct FinalizeVisitor : public InstVisitor<FinalizeVisitor> {
                 It->second.insert(&CB);
             }
         } else if (CF == FF || CF == RF) {
-            if (RedirectFunctions && (hasGlobals || hasDefines) &&
+            if (LibraryFunctions && (hasGlobals || hasDefines) &&
                 isFunctionPointer(*CB.getArgOperand(0), UseStrictFP, true)) {
                 auto &NewDst = CF == FF ? PFF : PRF;
                 assert(CB.getFunctionType() == NewDst.getFunctionType());
                 CB.setCalledFunction(NewDst);
-                ++NumFree;
+                ++NumMoveFree;
             }
         }
     }
@@ -1700,7 +1699,7 @@ struct FinalizeVisitor : public InstVisitor<FinalizeVisitor> {
                 Value *Args[] = {A0, A1, A2};
                 createCastedCall(IRB, IID == Intrinsic::memcpy ? PMCF : PMMF,
                                  Args);
-                ++NumCopyMove;
+                ++NumCopy;
             }
         } break;
         default:
@@ -1776,9 +1775,9 @@ static bool finalizeCFIInstrumentation(Module &M, CallGraph *CG,
         InitGlobalsExternal.clear();
     }
 
-    Changed |= NumOptDef || NumOptChk || NumChkInv || NumOptInv ||
-               NumCopyMove || NumFree || NumRecGuards || NumVTGlobal ||
-               NumFPGlobal || NumRetChks || NumRetDefs;
+    Changed |= NumOptDef || NumOptChk || NumChkInv || NumOptInv || NumCopy ||
+               NumMoveFree || NumRecGuards || NumVTGlobal || NumFPGlobal ||
+               NumRetChks || NumRetDefs;
     if (Changed) {
         outs() << M.getName() << ": Finalized ";
         if (RunCFI)
@@ -1790,9 +1789,9 @@ static bool finalizeCFIInstrumentation(Module &M, CallGraph *CG,
                    << " function pointers, " << NumVTGlobal
                    << " vtable pointers | " << NumIntGlobal << " internal, "
                    << NumExtGlobal << " external); ";
-        if (NumCopyMove || (RedirectFunctions && NumFree))
-            outs() << "redirected calls (" << NumCopyMove << " copies/moves, "
-                   << NumFree << " frees); ";
+        if (NumCopy || (LibraryFunctions && NumMoveFree))
+            outs() << "instrumented calls (" << NumCopy << " copies, "
+                   << NumMoveFree << " moves/frees); ";
         if (RunCFIRetAddr && (NumRetDefs || NumRetChks))
             outs() << "return pointers (" << NumRetDefs << " defines, "
                    << NumRetChks << " checks-invalidates)";

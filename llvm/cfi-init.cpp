@@ -30,10 +30,10 @@ cl::opt<bool>
                                   "pointer messages (default = true)"),
                          cl::init(true));
 cl::opt<bool>
-    RedirectFunctions("cfi-redirect-functions",
-                      cl::desc("Redirect free/mempcy/memmove/realloc to "
-                               "instrumented wrappers (default = true)"),
-                      cl::init(true));
+    LibraryFunctions("cfi-library-functions",
+                     cl::desc("Instrument memcpy/memmove and redirect "
+                              "free/realloc to wrappers (default = true)"),
+                     cl::init(true));
 
 cl::opt<bool> RunCFI("run-cfi",
                      cl::desc("Enable CFI instrumentation (default = true)"),
