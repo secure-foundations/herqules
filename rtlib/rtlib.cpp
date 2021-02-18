@@ -113,7 +113,7 @@ void POINTER_MEMCPY_FUNCTION(void *dst, const void *src, uint64_t sz) {
             EMBED_ADDRESS_SIZE_HIGH(reinterpret_cast<uintptr_t>(dst), sz),
             EMBED_ADDRESS_SIZE_LOW(reinterpret_cast<const uintptr_t>(src),
                                    sz))) {
-        constexpr static char err[] = "Error sending POINTER_BLOCK_COPY!\n";
+        constexpr static char err[] = "Error sending POINTER_BLOCK_MEMCOPY!\n";
         RAW_SYSCALL(3, SYS_write, STDERR_FILENO,
                     reinterpret_cast<uintptr_t>(err), sizeof(err));
         RAW_SYSCALL(1, SYS_exit_group, -1);
@@ -139,7 +139,7 @@ void POINTER_MEMMOVE_FUNCTION(void *dst, const void *src, uint64_t sz) {
             EMBED_ADDRESS_SIZE_HIGH(reinterpret_cast<uintptr_t>(dst), sz),
             EMBED_ADDRESS_SIZE_LOW(reinterpret_cast<const uintptr_t>(src),
                                    sz))) {
-        constexpr static char err[] = "Error sending POINTER_BLOCK_COPY!\n";
+        constexpr static char err[] = "Error sending POINTER_BLOCK_MEMMOVE!\n";
         RAW_SYSCALL(3, SYS_write, STDERR_FILENO,
                     reinterpret_cast<uintptr_t>(err), sizeof(err));
         RAW_SYSCALL(1, SYS_exit_group, -1);
