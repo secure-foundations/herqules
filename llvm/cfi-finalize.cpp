@@ -1258,7 +1258,7 @@ struct FinalizeVisitor : public InstVisitor<FinalizeVisitor> {
     CallPaths *CP;
     DominatorCallback &DCB;
     Function *TF, *ARA, *RA, *FF, *RF;
-    FunctionCallee PCF, PDF, PCIF, PIF, PMCF, PMMF, PFF, PRF;
+    FunctionCallee PCF, PDF, PCIF, PIF, PMCF, PFF, PRF;
 
     /* Information about current module */
     bool hasGlobals, hasChecks, hasDefines;
@@ -1372,7 +1372,7 @@ struct FinalizeVisitor : public InstVisitor<FinalizeVisitor> {
         }
 
         createHQFunctions(IRB, M, &PCF, &PCIF, &PDF, &PIF, nullptr, &PMCF,
-                          &PMMF, &PFF, &PRF);
+                          &PFF, &PRF);
 
         if (RunCFI && LibraryFunctions) {
             FF = M.getFunction("free");
@@ -1697,8 +1697,7 @@ struct FinalizeVisitor : public InstVisitor<FinalizeVisitor> {
                 // Different number of arguments, recreate the call
                 IRB.SetInsertPoint(II.getNextNode());
                 Value *Args[] = {A0, A1, A2};
-                createCastedCall(IRB, IID == Intrinsic::memcpy ? PMCF : PMMF,
-                                 Args);
+                createCastedCall(IRB, PMCF, Args);
                 ++NumCopy;
             }
         } break;

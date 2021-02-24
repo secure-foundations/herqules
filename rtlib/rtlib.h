@@ -23,10 +23,7 @@ INLINABLE void POINTER_CHECK_INVALIDATE_FUNCTION(const void **pp,
 INLINABLE void CFI_POINTER_DEFINE_FUNCTION(const void **pp, const void *p);
 INLINABLE void POINTER_INVALIDATE_FUNCTION(const void **pp);
 
-INLINABLE void POINTER_MEMCPY_FUNCTION(void *dst, const void *src,
-                                       uint64_t sz);
-INLINABLE void POINTER_MEMMOVE_FUNCTION(void *dst, const void *src,
-                                        uint64_t sz);
+INLINABLE void POINTER_COPY_FUNCTION(void *dst, const void *src, uint64_t sz);
 
 INLINABLE void POINTER_FREE_FUNCTION(void *ptr);
 INLINABLE void *POINTER_REALLOC_FUNCTION(void *src, uint64_t new_sz);

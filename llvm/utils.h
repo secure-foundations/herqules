@@ -90,8 +90,8 @@ CallInst *createCastedCall(IRBuilder<> &IRB, FunctionCallee &FC,
 void createHQFunctions(IRBuilder<> &IRB, Module &M, FunctionCallee *PCF,
                        FunctionCallee *PCIF, FunctionCallee *PDF,
                        FunctionCallee *PIF, FunctionCallee *SCF,
-                       FunctionCallee *PMCF, FunctionCallee *PMMF,
-                       FunctionCallee *PFF, FunctionCallee *PRF);
+                       FunctionCallee *PMCF, FunctionCallee *PFF,
+                       FunctionCallee *PRF);
 
 // Create system call instrumentation.
 bool createSyscallMessage(IRBuilder<> &IRB, CallBase &CB, FunctionCallee &SCF,

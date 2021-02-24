@@ -440,7 +440,7 @@ struct InstrumentVisitor : public InstVisitor<InstrumentVisitor> {
         TTF = Intrinsic::getDeclaration(&M, Intrinsic::type_test);
         RF = M.getFunction("realloc");
         createHQFunctions(IRB, M, &PCF, nullptr, &PDF, &PIF, &SCF, &PMCF,
-                          nullptr, nullptr, &PRF);
+                          nullptr, &PRF);
     }
 
     void visitFunction(Function &F) {

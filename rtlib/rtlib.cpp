@@ -94,7 +94,7 @@ void POINTER_INVALIDATE_FUNCTION(const void **pp) {
     }
 }
 
-void POINTER_MEMCPY_FUNCTION(void *dst, const void *src, uint64_t sz) {
+void POINTER_COPY_FUNCTION(void *dst, const void *src, uint64_t sz) {
 #ifndef NDEBUG
     printf("Copying pointer region %p to %p with size 0x%lx...\n", src, dst,
            sz);
@@ -113,33 +113,7 @@ void POINTER_MEMCPY_FUNCTION(void *dst, const void *src, uint64_t sz) {
             EMBED_ADDRESS_SIZE_HIGH(reinterpret_cast<uintptr_t>(dst), sz),
             EMBED_ADDRESS_SIZE_LOW(reinterpret_cast<const uintptr_t>(src),
                                    sz))) {
-        constexpr static char err[] = "Error sending POINTER_BLOCK_MEMCOPY!\n";
-        RAW_SYSCALL(3, SYS_write, STDERR_FILENO,
-                    reinterpret_cast<uintptr_t>(err), sizeof(err));
-        RAW_SYSCALL(1, SYS_exit_group, -1);
-    }
-}
-
-void POINTER_MEMMOVE_FUNCTION(void *dst, const void *src, uint64_t sz) {
-#ifndef NDEBUG
-    printf("Copying pointer region %p to %p with size 0x%lx...\n", src, dst,
-           sz);
-#endif /* NDEBUG */
-
-    assert(ADDRESS_FROM_EMBED(
-               EMBED_ADDRESS_SIZE_HIGH(reinterpret_cast<uintptr_t>(dst), -1)) ==
-               reinterpret_cast<uintptr_t>(dst) &&
-           ADDRESS_FROM_EMBED(EMBED_ADDRESS_SIZE_LOW(
-               reinterpret_cast<const uintptr_t>(src), -1)) ==
-               reinterpret_cast<const uintptr_t>(src) &&
-           SIZE_FROM_EMBED(EMBED_ADDRESS_SIZE_HIGH(-1, sz),
-                           EMBED_ADDRESS_SIZE_LOW(-1, sz)) == sz);
-    if (!interface.send_msg2(
-            HQ_MSG_COPY_BLOCK,
-            EMBED_ADDRESS_SIZE_HIGH(reinterpret_cast<uintptr_t>(dst), sz),
-            EMBED_ADDRESS_SIZE_LOW(reinterpret_cast<const uintptr_t>(src),
-                                   sz))) {
-        constexpr static char err[] = "Error sending POINTER_BLOCK_MEMMOVE!\n";
+        constexpr static char err[] = "Error sending POINTER_BLOCK_COPY!\n";
         RAW_SYSCALL(3, SYS_write, STDERR_FILENO,
                     reinterpret_cast<uintptr_t>(err), sizeof(err));
         RAW_SYSCALL(1, SYS_exit_group, -1);

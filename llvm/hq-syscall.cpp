@@ -95,7 +95,7 @@ struct SyscallVisitor : public InstVisitor<SyscallVisitor> {
         }
 
         createHQFunctions(IRB, M, nullptr, nullptr, nullptr, nullptr, &SCF,
-                          nullptr, nullptr, nullptr, nullptr);
+                          nullptr, nullptr, nullptr);
     }
 
     void visitFunction(Function &F) {

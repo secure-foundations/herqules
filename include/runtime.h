@@ -20,10 +20,9 @@
 #define POINTER_CHECK_FUNCTION __hq_pointer_check
 #define POINTER_CHECK_INVALIDATE_FUNCTION __hq_pointer_check_invalidate
 #define CFI_POINTER_DEFINE_FUNCTION __hq_cfi_pointer_define
-
 #define POINTER_INVALIDATE_FUNCTION __hq_pointer_invalidate
-#define POINTER_MEMCPY_FUNCTION __hq_pointer_memcpy
-#define POINTER_MEMMOVE_FUNCTION __hq_pointer_memmove
+
+#define POINTER_COPY_FUNCTION __hq_pointer_copy
 
 #define POINTER_FREE_FUNCTION __hq_pointer_free
 #define POINTER_REALLOC_FUNCTION __hq_pointer_realloc

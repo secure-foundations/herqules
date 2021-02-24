@@ -41,8 +41,8 @@ CallInst *createCastedCall(IRBuilder<> &IRB, FunctionCallee &FC,
 void createHQFunctions(IRBuilder<> &IRB, Module &M, FunctionCallee *PCF,
                        FunctionCallee *PCIF, FunctionCallee *PDF,
                        FunctionCallee *PIF, FunctionCallee *SCF,
-                       FunctionCallee *PMCF, FunctionCallee *PMMF,
-                       FunctionCallee *PFF, FunctionCallee *PRF) {
+                       FunctionCallee *PMCF, FunctionCallee *PFF,
+                       FunctionCallee *PRF) {
     auto &C = M.getContext();
 
     // Create basic types
@@ -102,11 +102,8 @@ void createHQFunctions(IRBuilder<> &IRB, Module &M, FunctionCallee *PCF,
             *SCF = M.getOrInsertFunction(STR(SYSCALL_FUNCTION), ALS, VTy);
         }
         if (PMCF)
-            *PMCF = M.getOrInsertFunction(STR(POINTER_MEMCPY_FUNCTION), ALP,
-                                          VTy, PTy, PTy, I64Ty);
-        if (PMMF)
-            *PMMF = M.getOrInsertFunction(STR(POINTER_MEMMOVE_FUNCTION), ALP,
-                                          VTy, PTy, PTy, I64Ty);
+            *PMCF = M.getOrInsertFunction(STR(POINTER_COPY_FUNCTION), ALP, VTy,
+                                          PTy, PTy, I64Ty);
     }
 
     if (PFF || PRF) {
