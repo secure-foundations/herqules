@@ -27,15 +27,16 @@ CallInst *createCastedCall(IRBuilder<> &IRB, FunctionCallee &FC,
     FunctionType *FTy = FC.getFunctionType();
 
     // Insert casts on arguments if necessary
-    assert(Args.size() == FTy->getNumParams() &&
-           "Number of arguments don't match callee type!");
-    for (unsigned i = 0; i < Args.size(); ++i) {
+    assert(Args.size() < FTy->getNumParams() &&
+           "Insufficient arguments for callee type!");
+    for (unsigned i = 0; i < FTy->getNumParams(); ++i) {
         Type *DTy = FTy->getParamType(i), *STy = Args[i]->getType();
         if (STy != DTy)
             Args[i] = castToTy(&IRB, Args[i], *DTy);
     }
 
-    return IRB.CreateCall(FC, Args);
+    return IRB.CreateCall(FC,
+                          ArrayRef<Value *>(Args.data(), FTy->getNumParams()));
 }
 
 void createHQFunctions(IRBuilder<> &IRB, Module &M, FunctionCallee *PCF,

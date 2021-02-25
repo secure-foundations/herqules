@@ -502,7 +502,7 @@ struct InstrumentVisitor : public InstVisitor<InstrumentVisitor> {
                 if (auto *AI = dyn_cast<AllocaInst>(simplify(Dst, false, true)))
                     stackPointers.insert(std::make_pair(AI, true));
             } else {
-                createCastedCall(IRB, PIF, MutableArrayRef<Value *>(Args, 1));
+                createCastedCall(IRB, PIF, Args);
                 ++NumFPInv;
             }
         } else if (isVTablePointer(*Val)) {
@@ -607,8 +607,7 @@ struct InstrumentVisitor : public InstVisitor<InstrumentVisitor> {
 
                         Args[0] = IV;
                         Args[1] = MAV;
-                        CallInst *TTC = createCastedCall(
-                            IRB, TTF, MutableArrayRef<Value *>(Args));
+                        CallInst *TTC = createCastedCall(IRB, TTF, Args);
 
                         cast<PHINode>(NewV)->addIncoming(TTC, BB);
                         // Recurse on the new type test
@@ -638,8 +637,7 @@ struct InstrumentVisitor : public InstVisitor<InstrumentVisitor> {
 
                         Args[0] = IV;
                         Args[1] = MAV;
-                        CallInst *TTC = createCastedCall(
-                            IRB, TTF, MutableArrayRef<Value *>(Args));
+                        CallInst *TTC = createCastedCall(IRB, TTF, Args);
 
                         cast<SelectInst>(NewV)->setOperand(i, TTC);
                         // Recurse on the new type test
