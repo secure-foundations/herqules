@@ -865,7 +865,7 @@ static bool analyzeDefinedStore(const DataLayout &DL, const DominatorTree &DT,
                         if (IF == F) {
                             auto *CF = CB->getCalledFunction();
                             if (CorrectOffset && CF &&
-                                isCFIPointerFunction(*CF))
+                                isCFIPointerFunction(CF->getName()))
                                 LocalMessages.push_back(CB);
                         } else
                             hasMultipleCallers = true;
@@ -1295,7 +1295,7 @@ struct FinalizeVisitor : public InstVisitor<FinalizeVisitor> {
     // Override hierarchy to perform post-visit modifications
     void visit(Function &F) {
         // If inlining is enabled, don't instrument ourselves
-        if (F.isDeclaration() || isHQFunction(F))
+        if (F.isDeclaration() || isHQFunction(F.getName()))
             return;
 
         visitFunction(F);

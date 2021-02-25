@@ -588,10 +588,10 @@ MemFnType getSPECNoStrictFP(const StringRef MName, const StringRef FName) {
     return MemFnType::Unknown;
 }
 
-bool isHQFunction(const Function &F) { return F.getName().startswith("__hq_"); }
+bool isHQFunction(const StringRef Name) { return Name.startswith("__hq_"); }
 
-bool isCFIPointerFunction(const Function &F) {
-    return F.getName().startswith("__hq_cfi_pointer_");
+bool isCFIPointerFunction(const StringRef Name) {
+    return Name.startswith("__hq_cfi_pointer_");
 }
 
 bool isCString(const Value &Val) {

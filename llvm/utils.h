@@ -140,10 +140,10 @@ bool performInlining(Module &M, const cl::opt<std::string> &Path);
 MemFnType getSPECNoStrictFP(const StringRef MName, const StringRef FName);
 
 // Returns whether the call is a HQ function
-bool isHQFunction(const Function &F);
+bool isHQFunction(const StringRef Name);
 
 // Returns whether the call is a CFI pointer function
-bool isCFIPointerFunction(const Function &F);
+bool isCFIPointerFunction(const StringRef Name);
 
 // Returns whether the variable is a C string
 bool isCString(const Value &V);

@@ -419,7 +419,7 @@ struct InstrumentVisitor : public InstVisitor<InstrumentVisitor> {
     // Override hierarchy to allow skipping functions
     void visit(Function &F) {
         // If inlining is enabled, don't instrument ourselves
-        if (F.isDeclaration() || isHQFunction(F))
+        if (F.isDeclaration() || isHQFunction(F.getName()))
             return;
 
         visitFunction(F);
