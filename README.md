@@ -6,7 +6,7 @@ In this project, we present an alternative solution by adding a fast hardware-ba
 
 # Publication Information
 
-Daming D. Chen, Wen Shih Lim, Mohammad Bakhshalipour, Phillip B. Gibbons, James C. Hoe, Bryan Parno. *HerQules: Securing Programs via Hardware-Enforced Message Queues*. To Appear In **Proceedings of the Twenty-Sixth International Conference on Architectural Support for Programming Languages and Operating Systems** (ASPLOS '21). Association for Computing Machinery, New York, NY, USA. April 2021.
+Daming D. Chen, Wen Shih Lim, Mohammad Bakhshalipour, Phillip B. Gibbons, James C. Hoe, Bryan Parno. [*HerQules: Securing Programs via Hardware-Enforced Message Queues*](papers/2021_asplos_herqules.pdf). In **Proceedings of the Twenty-Sixth International Conference on Architectural Support for Programming Languages and Operating Systems** (ASPLOS '21). Association for Computing Machinery, New York, NY, USA. April 2021.
 
 # Repository Information
 
