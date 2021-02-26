@@ -142,6 +142,23 @@ static void tracepoint_sys_enter(void *data, struct pt_regs *regs, long id) {
         bool after = 0;
         unsigned long jiffies_start, sleep = 1;
 
+        // Allow signal return and vDSO system calls, which should never be
+        // preceded by compile-time instrumentation.
+        // Signal handler return occurs after kernel-generated signal delivery.
+        // vDSO uses kernel-loaded binary in process memory.
+        if (id == __NR_rt_sigreturn
+#ifdef CONFIG_X86_64
+            || id == __NR_clock_getres || id == __NR_clock_gettime ||
+            id == __NR_getcpu || id == __NR_gettimeofday || id == __NR_time
+#endif
+        ) {
+            pr_info_ratelimited(
+                "Allowing kernel-generated system call %ld in context tgid "
+                "%d (%s)!\n",
+                id, tgid, app->name);
+            goto out;
+        }
+
 #ifdef HQ_UNSAFE_COMPAT_RR
         // When running under rr, it may inject psuedo-syscalls with number
         // greater than or equal to RR_CALL_BASE (1000).
@@ -209,15 +226,9 @@ static void tracepoint_sys_enter(void *data, struct pt_regs *regs, long id) {
                 goto out;
             }
 
-            if (id == __NR_rt_sigreturn || id == __NR_restart_syscall ||
-                id == __NR_exit || id == __NR_exit_group
-#ifdef CONFIG_X86_64
-                || id == __NR_clock_getres || id == __NR_clock_gettime ||
-                id == __NR_getcpu || id == __NR_gettimeofday || id == __NR_time
-#endif
-            ) {
-                // Always allow exit, restart on signal, and vDSO system calls
-                // without checking
+            if (id == __NR_exit || id == __NR_exit_group) {
+                // Allow potentially-uninstrumented exit, which may be called
+                // from the C runtime after unmapping all memory regions
                 goto out;
             }
 
