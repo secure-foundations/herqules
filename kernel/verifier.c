@@ -22,6 +22,8 @@
 /* Function declarations */
 static ssize_t interface_verifier_read(struct file *fp, char *buf, size_t len,
                                        loff_t *off);
+static ssize_t interface_verifier_write(struct file *fp, const char *buf,
+                                        size_t len, loff_t *off);
 static int interface_verifier_mmap(struct file *fp, struct vm_area_struct *vma);
 static int interface_verifier_open(struct inode *ip, struct file *fp);
 static int interface_verifier_release(struct inode *ip, struct file *fp);
@@ -30,16 +32,11 @@ static int interface_verifier_release(struct inode *ip, struct file *fp);
 const struct file_operations verifier_interface_fops = {
     .owner = THIS_MODULE,
     .read = interface_verifier_read,
+    .write = interface_verifier_write,
     .mmap = interface_verifier_mmap,
     .open = interface_verifier_open,
     .release = interface_verifier_release,
 };
-
-#ifdef CONFIG_HAVE_IOREMAP_PROT
-const struct vm_operations_struct verifier_vma_ops = {
-    .access = generic_access_phys,
-};
-#endif /* CONFIG_HAVE_IOREMAP_PROT */
 
 // Waitqueue for messages that must be delivered before resuming
 DECLARE_WAIT_QUEUE_HEAD(wq);
@@ -58,12 +55,17 @@ DEFINE_SPINLOCK(fifo_lock);
 
 static int send_message(struct hq_verifier_msg *msg, void *ptr, bool wait) {
     int ret = 0;
+    uint64_t counter;
     unsigned long flags;
 
-    if (!verifier)
-        return -ENODEV;
-
     spin_lock_irqsave(&fifo_lock, flags);
+    if (!verifier) {
+        ret = -ENODEV;
+        goto out;
+    }
+
+    // Track our current queue position
+    counter = verifier->rd_counter++;
 
     // Check both FIFOs are not full
     if (kfifo_is_full(&msg_fifo) || (ptr && kfifo_is_full(&map_fifo))) {
@@ -72,18 +74,17 @@ static int send_message(struct hq_verifier_msg *msg, void *ptr, bool wait) {
     }
 
     // Check either both insertions succeeded or failed
-    if (kfifo_put(&msg_fifo, *msg) != (ptr ? kfifo_put(&map_fifo, ptr) : 1))
+    if (kfifo_put(&msg_fifo, *msg) != (ptr ? kfifo_put(&map_fifo, ptr) : 1)) {
         ret = -ENOSPC;
-
-    atomic_set((atomic_t *)&verifier->pending, kfifo_len(&msg_fifo));
+        goto out;
+    }
 out:
     spin_unlock_irqrestore(&fifo_lock, flags);
 
     if (!ret && wait) {
         // Ignore return value; handle killed processes normally
-        if (wait_event_killable(wq, kfifo_is_empty(&msg_fifo))) {
+        if (wait_event_killable(wq, verifier && counter < verifier->wr_counter))
             pr_warn("Interrupted by signal in tgid %d!\n", msg->pid);
-        }
     }
 
     return ret;
@@ -149,7 +150,7 @@ static ssize_t interface_verifier_read(struct file *fp, char *buf, size_t len,
                                        loff_t *off) {
     int ret;
     unsigned long flags;
-    unsigned int copied, rem;
+    unsigned int copied;
 
     if (!verifier)
         return -ENXIO;
@@ -157,14 +158,8 @@ static ssize_t interface_verifier_read(struct file *fp, char *buf, size_t len,
         return -EINVAL;
 
     spin_lock_irqsave(&fifo_lock, flags);
-
     ret = kfifo_to_user(&msg_fifo, buf, len, &copied);
-    rem = kfifo_len(&msg_fifo);
-    atomic_set((atomic_t *)&verifier->pending, rem);
-
     spin_unlock_irqrestore(&fifo_lock, flags);
-    if (!rem)
-        wake_up(&wq);
     return ret ? ret : copied;
 }
 
@@ -188,14 +183,25 @@ static int interface_verifier_mmap(struct file *fp,
                      ~(VM_MERGEABLE | VM_HUGEPAGE | VM_HUGETLB | VM_MAYEXEC)) |
                     VM_DONTCOPY | VM_DONTEXPAND | VM_SHARED;
 
-    // Support debug access to the mapping
-#ifdef CONFIG_HAVE_IOREMAP_PROT
-    vma->vm_ops = &verifier_vma_ops;
-#endif /* CONFIG_HAVE_IOREMAP_PROT */
-
     // Map the physical page(s)
     return remap_pfn_range(vma, vma->vm_start, virt_to_phys(ptr) >> PAGE_SHIFT,
                            len, vma->vm_page_prot);
+}
+
+static ssize_t interface_verifier_write(struct file *fp, const char *buf,
+                                        size_t len, loff_t *off) {
+    uint64_t sz;
+
+    if (!verifier)
+        return -ENXIO;
+
+    if (len != sizeof(sz) || !buf)
+        return -EINVAL;
+
+    get_user(sz, buf);
+    verifier->wr_counter += sz;
+    wake_up_nr(&wq, sz);
+    return 0;
 }
 
 static int interface_verifier_open(struct inode *ip, struct file *fp) {
@@ -221,19 +227,25 @@ static int interface_verifier_open(struct inode *ip, struct file *fp) {
 
 static int interface_verifier_release(struct inode *ip, struct file *fp) {
     struct rhashtable_iter iter;
+    struct hq_verifier_notify *ver = verifier;
     struct hq_ctx *app;
     unsigned long flags;
 
-    WARN_ON(!verifier);
+    WARN_ON(!ver);
 
-    free_pages((unsigned long)verifier, get_order(SYSCALL_MAP_SIZE));
-    verifier = NULL;
+    // Force all waiters to finish
+    ver->wr_counter = ver->rd_counter + 1;
+    wake_up_all(&wq);
 
     // Clear the FIFOs
     spin_lock_irqsave(&fifo_lock, flags);
     kfifo_reset(&msg_fifo);
     kfifo_reset(&map_fifo);
+
+    verifier = NULL;
     spin_unlock_irqrestore(&fifo_lock, flags);
+
+    free_pages((unsigned long)ver, get_order(SYSCALL_MAP_SIZE));
 
     // Clear the rhashtable
     rhashtable_walk_enter(&hq_table, &iter);
@@ -260,7 +272,5 @@ static int interface_verifier_release(struct inode *ip, struct file *fp) {
     }
     rhashtable_walk_stop(&iter);
     rhashtable_walk_exit(&iter);
-
-    wake_up(&wq);
     return 0;
 }
