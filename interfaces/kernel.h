@@ -22,7 +22,7 @@ class Verifier {
     static constexpr char DEVICE_NAME[] = "/dev/hq-verifier-0";
 
     int fd = -1;
-    const struct hq_verifier_notify *notify = nullptr;
+    struct hq_verifier_notify *notify = nullptr;
     std::array<struct hq_verifier_msg, BUFFER_SIZE> msgs;
 
   public:
@@ -99,11 +99,17 @@ class Verifier {
         munmap(map, SYSCALL_MAP_SIZE);
     }
 
-    bool get_notify() const {
+    bool get_pending() const {
+        // Initial message provides the notify page
         if (__builtin_expect(!notify, 0))
             return true;
 
-        return __atomic_load_n(&notify->pending, __ATOMIC_ACQUIRE);
+        return notify->rd_counter != notify->wr_counter;
+    }
+
+    void set_complete(size_t sz) {
+        size_t buf = sz;
+        write(fd, &buf, sizeof(buf));
     }
 
     bool set_notify(struct hq_verifier_notify *ptr) {

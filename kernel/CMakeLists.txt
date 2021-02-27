@@ -12,7 +12,7 @@ separate_arguments(kernel_cflags UNIX_COMMAND "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_
 
 add_custom_command(OUTPUT hq.ko
                    COMMAND ${CMAKE_MAKE_PROGRAM} KCFLAGS="${kernel_cflags}" -C ${module_path} M=${CMAKE_CURRENT_BINARY_DIR} src=${CMAKE_CURRENT_SOURCE_DIR}
-                   DEPENDS ${sources} Kbuild
+                   DEPENDS ${sources} $<TARGET_PROPERTY:kernel,INCLUDE_DIRECTORIES> Kbuild
                   )
 
 add_custom_target(kernel ALL DEPENDS hq.ko)

@@ -74,6 +74,30 @@ template <typename V, typename RX> class Verifier {
         }
     }
 
+    template <typename T> bool get_verifier_msgs(T &verifier) {
+        size_t done;
+
+        if (!verifier.get_pending())
+            return true;
+
+        // Parse verifier message(s)
+        auto verifier_end = verifier.get_msgs();
+        if (!verifier_end) {
+            std::cerr << "Error receiving verifier messages!" << std::endl;
+            return false;
+        }
+
+        auto verifier_pos = verifier.begin();
+        done = verifier_end - verifier_pos;
+        if (!parse_verifier_msgs(verifier_pos, verifier_end)) {
+            std::cerr << "Error parsing verifier messages!" << std::endl;
+            return false;
+        }
+
+        verifier.set_complete(done);
+        return true;
+    }
+
     bool parse_app_msgs(typename RX::const_iterator &begin,
                         const typename RX::const_iterator &end) {
         // Process application messages unless there are pending kernel
@@ -151,6 +175,7 @@ template <typename V, typename RX> class Verifier {
                     return false;
                 }
 
+                assert(begin->value > 0);
                 // Duplicate the existing process with new PID
                 auto res = processes.try_emplace(begin->value, it->second);
                 if (!res.second) {

@@ -32,33 +32,33 @@ std::ostream &operator<<(std::ostream &os, const volatile hq_msg &msg) {
         const uintptr_t dst = ADDRESS_FROM_EMBED(msg.values[0]),
                         src = ADDRESS_FROM_EMBED(msg.values[1]),
                         sz = SIZE_FROM_EMBED(msg.values[0], msg.values[1]);
-        os << "COPY-BLOCK (" << msg.op << ") " << std::hex << "[" << src << ", "
+        os << "COPY-BLOCK (" << msg.op << ") [" << std::hex << src << ", "
            << src + sz << ") -> [" << dst << ", " << dst + sz << ")";
         break;
     }
     case HQ_MSG_INVALIDATE_BLOCK: {
         const uintptr_t ptr = msg.values[0], sz = msg.values[1];
-        os << "INVALIDATE-BLOCK (" << msg.op << ") " << std::hex << "[" << ptr
-           << ", " << ptr + sz << ")";
+        os << "INVALIDATE-BLOCK (" << msg.op << ") [" << std::hex << ptr << ", "
+           << ptr + sz << ")";
         break;
     }
     case HQ_MSG_MOVE_BLOCK: {
         const uintptr_t dst = ADDRESS_FROM_EMBED(msg.values[0]),
                         src = ADDRESS_FROM_EMBED(msg.values[1]),
                         sz = SIZE_FROM_EMBED(msg.values[0], msg.values[1]);
-        os << "MOVE-BLOCK (" << msg.op << ") " << std::hex << "[" << src << ", "
+        os << "MOVE-BLOCK (" << msg.op << ") [" << std::hex << src << ", "
            << src + sz << ") -> [" << dst << ", " << dst + sz << ")";
         break;
     }
     case CFI_MSG_DEFINE: {
         const uintptr_t ptr = msg.values[0], val = msg.values[1];
-        os << "CFI-DEFINE (" << msg.op << ") " << std::hex << ptr << " = "
+        os << "CFI-DEFINE (" << msg.op << ") *" << std::hex << ptr << " = "
            << val;
         break;
     }
     case CFI_MSG_CHECK: {
         const uintptr_t ptr = msg.values[0], val = msg.values[1];
-        os << "CFI-CHECK (" << msg.op << ") " << std::hex << ptr
+        os << "CFI-CHECK (" << msg.op << ") *" << std::hex << ptr
            << " == " << val;
         break;
     }

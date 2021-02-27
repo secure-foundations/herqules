@@ -19,7 +19,7 @@ struct hq_verifier_msg {
 } __attribute__((__aligned__(8)));
 
 struct hq_verifier_notify {
-    int pending;
+    uint64_t rd_counter, wr_counter;
 };
 
 // Must round to page size in order to remap to userspace

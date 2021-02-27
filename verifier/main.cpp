@@ -53,19 +53,8 @@ int main(int argc, char **argv) {
     // Read and loop on messages
     while (execute) {
         // Parse verifier message(s) if available
-        if (int_verify.get_notify()) {
-            auto verifier_end = int_verify.get_msgs();
-            if (!verifier_end) {
-                std::cerr << "Error receiving verifier messages!" << std::endl;
-                return -1;
-            }
-
-            auto verifier_pos = int_verify.begin();
-            if (!verifier.parse_verifier_msgs(verifier_pos, verifier_end)) {
-                std::cerr << "Error parsing verifier messages!" << std::endl;
-                return -1;
-            }
-        }
+        if (!verifier.get_verifier_msgs(int_verify))
+            return -1;
 
         auto app_end = int_app.get_msgs();
         while (!app_end) {
