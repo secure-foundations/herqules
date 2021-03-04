@@ -142,13 +142,11 @@ static void tracepoint_sys_enter(void *data, struct pt_regs *regs, long id) {
         bool after = 0;
         unsigned long jiffies_start, sleep = 1;
 
-        // Allow signal return and vDSO system calls, which should never be
-        // preceded by compile-time instrumentation.
-        // Signal handler return occurs after kernel-generated signal delivery.
+        // Allow vDSO system calls, which lack compile-time instrumentation.
         // vDSO uses kernel-loaded binary in process memory.
-        if (id == __NR_rt_sigreturn
+        if (
 #ifdef CONFIG_X86_64
-            || id == __NR_clock_getres || id == __NR_clock_gettime ||
+            id == __NR_clock_getres || id == __NR_clock_gettime ||
             id == __NR_gettimeofday
 #endif
         ) {
