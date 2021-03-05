@@ -107,7 +107,8 @@ struct SyscallVisitor : public InstVisitor<SyscallVisitor> {
         Value *V = CB.getCalledOperand();
 
         if (hasSyscall(*V) && !isHQSyscall(*currentFunc)) {
-            if (currentFunc->hasFnAttribute(Attribute::AlwaysInline)) {
+            if (currentFunc->hasFnAttribute(Attribute::AlwaysInline) ||
+                currentFunc->hasFnAttribute(Attribute::Naked)) {
                 // If this system call is inlinable, send the system call
                 // message before each call site of the current function
                 for (auto *U : currentFunc->users()) {
