@@ -131,7 +131,7 @@ template <typename V, typename RX> class Verifier {
             }
 #endif /* HQ_INTERFACE_UNSAFE_PID */
 
-            // Dispatch the message for processing
+                // Dispatch the message for processing
 #ifndef NDEBUG
             std::cout << "PID: " << std::dec << previous->first << ", message "
                       << *begin << std::endl;
@@ -179,12 +179,25 @@ template <typename V, typename RX> class Verifier {
                 // Duplicate the existing process with new PID
                 auto res = processes.try_emplace(begin->value, it->second);
                 if (!res.second) {
-                    std::cerr << "PID: " << std::dec << pid
-                              << " Clone already exists!" << std::endl;
-                    return false;
-                } else
-                    previous = res.first;
+                    if (
+#ifndef HQ_PRESERVE_STATS
+                        1
+#else
+                        !res.first->second.is_dead()
+#endif /* HQ_PRESERVE_STATS */
+                    ) {
+                        std::cerr << "PID: " << std::dec << pid
+                                  << " Clone already exists!" << std::endl;
+                        return false;
+                    } else {
+                        std::cout << "PID: " << std::dec << pid
+                                  << "Replacing dead process!" << std::endl;
+                        res = processes.insert_or_assign(begin->value,
+                                                         Process(it->second));
+                    }
+                }
 
+                previous = res.first;
                 std::cout << "PID: " << std::dec << pid << " ("
                           << res.first->second.get_name() << ") cloned to "
                           << begin->value << "!" << std::endl;
