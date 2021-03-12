@@ -7,7 +7,7 @@ OPAE=0
 
 # packages
 apt-get update
-apt-get install -y build-essential binutils-dev cmake ccache ninja-build linux-headers-$(uname -r) clang-10 clang-format-10 llvm-10-dev linux-tools-$(uname -r) python3-pandas libcap-dev wget libssl-dev
+apt-get install -y build-essential binutils-dev cmake ccache ninja-build linux-headers-$(uname -r) clang-11 clang-format-11 llvm-11-dev linux-tools-$(uname -r) libcap-dev libssl-dev wget
 
 if [ $DPDK -ne 0 ]; then
     apt-get install -y dpdk libdpdk-dev
@@ -36,7 +36,7 @@ sysctl -f
 echo "\ndebugfs\t/sys/kernel/debug\tdebugfs\tdefaults,mode=755\t0\t0\ntracefs\t/sys/kernel/debug/tracing\ttracefs\tdefaults,mode=755\t0\t0" | tee -a /etc/fstab
 
 # hugepages
-sed -i "s/^GRUB_CMDLINE_LINUX=\"/&default_hugepagesz=1G hugepagesz=1G hugepages=1 hugepagesz=2MB hugepages=8 /" /etc/default/grub
+sed -i "s/^GRUB_CMDLINE_LINUX=\"/&default_hugepagesz=1G hugepagesz=1G hugepages=1 hugepagesz=2MB hugepages=1024 /" /etc/default/grub
 update-grub
 mkdir /mnt/huge_1GB
 chmod a+rw -R /mnt/huge_1GB
