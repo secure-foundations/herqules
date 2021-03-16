@@ -16,6 +16,10 @@ add_executable(rtt
     ${INTERFACE_TX_SRC}
 )
 
+add_dependencies(rtt
+    rtlib
+)
+
 target_link_libraries(rtt
     ${CMAKE_BINARY_DIR}/rtlib/librtlib.a
     ${INTERFACE_LIBS}

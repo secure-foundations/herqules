@@ -10,6 +10,10 @@ file(GLOB sources CONFIGURE_DEPENDS "*.c" "*.h" "*.o" "*.mod.o")
 string(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_UPPER)
 separate_arguments(kernel_cflags UNIX_COMMAND "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_${CMAKE_BUILD_TYPE_UPPER}}")
 
+if (NOT ${CMAKE_GENERATOR} STREQUAL "Unix Makefiles")
+    message(FATAL_ERROR "Kernel modules must be built using Makefiles")
+endif()
+
 add_custom_command(OUTPUT hq.ko
                    COMMAND ${CMAKE_MAKE_PROGRAM} KCFLAGS="${kernel_cflags}" -C ${module_path} M=${CMAKE_CURRENT_BINARY_DIR} src=${CMAKE_CURRENT_SOURCE_DIR}
                    DEPENDS ${sources} $<TARGET_PROPERTY:kernel,INCLUDE_DIRECTORIES> Kbuild
