@@ -4,6 +4,7 @@
 #include <array>
 
 #include <fcntl.h>
+#include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/user.h>
 #include <unistd.h>
@@ -54,11 +55,15 @@ class Verifier {
     }
 
     bool open() {
-        static_assert(sizeof(struct hq_verifier_msg) == 16,
+        static_assert(sizeof(struct hq_verifier_msg) == 32,
                       "Messages from kernel must be fixed size!");
 
         fd = ::open(DEVICE_NAME, O_CLOEXEC | O_SYNC | O_RDWR);
         return *this;
+    }
+
+    bool kill(pid_t pid) {
+        return ioctl(fd, IOCTL_KILL_TGID, pid) == 0;
     }
 
     void *map() {

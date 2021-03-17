@@ -24,6 +24,8 @@ static ssize_t interface_verifier_read(struct file *fp, char *buf, size_t len,
                                        loff_t *off);
 static ssize_t interface_verifier_write(struct file *fp, const char *buf,
                                         size_t len, loff_t *off);
+static long interface_verifier_ioctl(struct file *fp, unsigned int cmd,
+                                     unsigned long arg);
 static int interface_verifier_mmap(struct file *fp, struct vm_area_struct *vma);
 static int interface_verifier_open(struct inode *ip, struct file *fp);
 static int interface_verifier_release(struct inode *ip, struct file *fp);
@@ -33,6 +35,7 @@ const struct file_operations verifier_interface_fops = {
     .owner = THIS_MODULE,
     .read = interface_verifier_read,
     .write = interface_verifier_write,
+    .unlocked_ioctl = interface_verifier_ioctl,
     .mmap = interface_verifier_mmap,
     .open = interface_verifier_open,
     .release = interface_verifier_release,
@@ -104,6 +107,7 @@ int verifier_interface_on_clone(pid_t ppid, struct hq_ctx *ctx) {
         .pid = ppid,
         .op = HQ_VERIFIER_MSG_CLONE,
         .value = ctx->tgid,
+        .comm = {0},
     };
 
     if ((ret = send_message(&msg, map, true)))
@@ -117,6 +121,8 @@ int verifier_interface_on_exit(pid_t pid) {
     struct hq_verifier_msg msg = {
         .pid = pid,
         .op = HQ_VERIFIER_MSG_TERMINATE,
+        .value = 0,
+        .comm = {0},
     };
 
     if ((ret = send_message(&msg, NULL, false)))
@@ -136,7 +142,9 @@ int verifier_interface_notify(pid_t pid, struct hq_ctx *ctx) {
     struct hq_verifier_msg msg = {
         .pid = pid,
         .op = HQ_VERIFIER_MSG_SYSCALL_PAGE,
+        .value = 0,
     };
+    strncpy(msg.comm, ctx->name, sizeof(msg.comm));
 
     if ((ret = send_message(&msg, map, true)))
         pr_warn(
@@ -204,11 +212,38 @@ static ssize_t interface_verifier_write(struct file *fp, const char *buf,
     return 0;
 }
 
+static long interface_verifier_ioctl(struct file *fp, unsigned int cmd,
+                                     unsigned long arg) {
+    switch (cmd) {
+    case IOCTL_KILL_TGID: {
+        struct pid *pid = find_get_pid(arg);
+        struct task_struct *tsk = pid ? get_pid_task(pid, PIDTYPE_TGID) : NULL;
+        if (!tsk) {
+            pr_warn("Cannot find tgid %lu!\n", arg);
+            return -ESRCH;
+        }
+
+#ifdef HQ_ENFORCE_CHECKS
+        pr_warn("Killing tgid %lu (%s)!\n", arg, tsk->comm);
+        send_sig(HQ_KILL_SIGNAL, tsk, 1);
+#endif /* HQ_ENFORCE_CHECKS */
+        return 0;
+    } break;
+
+    default:
+        break;
+    }
+
+    return -EINVAL;
+}
+
 static int interface_verifier_open(struct inode *ip, struct file *fp) {
     int ret = 0;
     struct hq_verifier_msg msg = {
         .pid = 0,
         .op = HQ_VERIFIER_MSG_NOTIFY,
+        .value = 0,
+        .comm = {0},
     };
 
     if (verifier)

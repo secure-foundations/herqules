@@ -1,6 +1,7 @@
 #ifndef _HQ_VERIFIER_MESSAGES_H_
 #define _HQ_VERIFIER_MESSAGES_H_
 
+#include <linux/ioctl.h>
 #include <linux/types.h>
 
 #include "config.h"
@@ -16,11 +17,14 @@ struct hq_verifier_msg {
     pid_t pid;
     enum hq_verifier_msg_op op;
     uintptr_t value;
+    char comm[16];
 } __attribute__((__aligned__(8)));
 
 struct hq_verifier_notify {
     uint64_t rd_counter, wr_counter;
 };
+
+#define IOCTL_KILL_TGID _IO('h', 0)
 
 // Must round to page size in order to remap to userspace
 #define SYSCALL_MAP_SIZE                                                       \

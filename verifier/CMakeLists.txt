@@ -29,7 +29,6 @@ if (NOT ${INTERFACE} STREQUAL "OPAE")
 endif()
 
 target_link_libraries(verifier
-    cap
     absl::node_hash_map
     ${INTERFACE_LIBS}
 )

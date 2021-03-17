@@ -30,14 +30,6 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    HQ::Verifier<verifier_interface, rx_interface> verifier(int_verify,
-                                                            int_app);
-    // Check verifier can kill
-    if (!verifier.can_kill()) {
-        std::cerr << "Error checking for capability CAP_KILL!" << std::endl;
-        return -1;
-    }
-
     // Register signal handler
     struct sigaction sa;
     sa.sa_sigaction = interrupt_handler;
@@ -48,6 +40,7 @@ int main(int argc, char **argv) {
         return -1;
     }
 
+    HQ::Verifier<verifier_interface, rx_interface> verifier(int_verify, int_app);
     std::cout << "Awaiting messages..." << std::endl;
 
     // Read and loop on messages

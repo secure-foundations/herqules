@@ -2,13 +2,10 @@
 #define _HQ_VERIFIER_H_
 
 #include <cassert>
-#include <fstream>
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <type_traits>
 
-#include <sys/capability.h>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/user.h>
@@ -220,7 +217,7 @@ template <typename V, typename RX> class Verifier {
                 bool insert;
                 // Create new process
                 std::tie(it, insert) =
-                    processes.try_emplace(pid, process_name(pid));
+                    processes.try_emplace(pid, begin->comm);
                 if (!insert) {
                     std::cerr << "PID: " << std::dec << pid
                               << " Already exists!" << std::endl;
@@ -275,46 +272,17 @@ template <typename V, typename RX> class Verifier {
         return true;
     }
 
-    static bool can_kill() {
-#ifdef HQ_ENFORCE_CHECKS
-        cap_flag_value_t can_kill = CAP_CLEAR;
-        cap_t cap = cap_get_proc();
-
-        cap_get_flag(cap, CAP_KILL, CAP_PERMITTED, &can_kill);
-
-        cap_free(cap);
-        return can_kill == CAP_SET;
-#else
-        return true;
-#endif /* HQ_ENFORCE_CHECKS */
-    }
-
-    static bool kill_process(iterator it) {
+    bool kill_process(iterator it) {
         it->second.cleanup();
 
 #ifdef HQ_ENFORCE_CHECKS
         std::cout << "PID: " << std::dec << it->first << " ("
                   << it->second.get_name() << ") killing..." << std::endl;
-        if (kill(it->first, HQ_KILL_SIGNAL) && errno != ESRCH)
+        if (!kernel.kill(it->first) && errno != ESRCH)
             return false;
 #endif /* HQ_ENFORCE_CHECKS */
 
         return true;
-    }
-
-    static std::string process_name(pid_t pid) {
-        std::string out = "<unknown>";
-        std::stringstream path;
-        std::ifstream file;
-
-        // Concatenate path
-        path << "/proc/" << pid << "/comm";
-
-        // Read file
-        file.open(path.str(), std::ifstream::in);
-        if (file.good())
-            std::getline(file, out);
-        return out;
     }
 
     static void print_header(std::ostream &os) {

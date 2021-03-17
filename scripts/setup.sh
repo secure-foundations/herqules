@@ -7,7 +7,7 @@ OPAE=0
 
 # packages
 apt-get update
-apt-get install -y build-essential binutils-dev cmake ccache ninja-build linux-headers-$(uname -r) clang-11 clang-format-11 llvm-11-dev linux-tools-$(uname -r) libcap-dev libssl-dev wget
+apt-get install -y build-essential binutils-dev cmake ccache ninja-build linux-headers-$(uname -r) clang-11 clang-format-11 llvm-11-dev linux-tools-$(uname -r) libncurses-dev libssl-dev libtinfo-dev wget
 
 if [ $DPDK -ne 0 ]; then
     apt-get install -y dpdk libdpdk-dev
