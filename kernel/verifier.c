@@ -47,16 +47,23 @@ DECLARE_WAIT_QUEUE_HEAD(wq);
 // Notify page for the verifier
 static struct hq_verifier_notify *verifier;
 
+// Tracks pointer and size for each mappable region
+struct hq_verifier_map {
+    void *ptr;
+    size_t sz;
+};
+
 // Message buffer queue for the verifier
 DEFINE_KFIFO(msg_fifo, struct hq_verifier_msg, VERIFIER_MSG_FIFO_SIZE);
 // Memory mapping queue for the verifier
-DEFINE_KFIFO(map_fifo, void *, VERIFIER_MSG_FIFO_SIZE);
+DEFINE_KFIFO(map_fifo, struct hq_verifier_map, VERIFIER_MSG_FIFO_SIZE);
 
 // Lock on message queues to ensure single-producer, and to prevent reordering
 // between both queues
 DEFINE_SPINLOCK(fifo_lock);
 
-static int send_message(struct hq_verifier_msg *msg, void *ptr, bool wait) {
+static int send_message(const struct hq_verifier_msg *msg,
+                        const struct hq_verifier_map *map, bool wait) {
     int ret = 0;
     uint64_t counter;
     unsigned long flags;
@@ -71,13 +78,13 @@ static int send_message(struct hq_verifier_msg *msg, void *ptr, bool wait) {
     counter = verifier->rd_counter++;
 
     // Check both FIFOs are not full
-    if (kfifo_is_full(&msg_fifo) || (ptr && kfifo_is_full(&map_fifo))) {
+    if (kfifo_is_full(&msg_fifo) || (map && kfifo_is_full(&map_fifo))) {
         ret = -ENOSPC;
         goto out;
     }
 
     // Check either both insertions succeeded or failed
-    if (kfifo_put(&msg_fifo, *msg) != (ptr ? kfifo_put(&map_fifo, ptr) : 1)) {
+    if (kfifo_put(&msg_fifo, *msg) != (map ? kfifo_put(&map_fifo, *map) : 1)) {
         ret = -ENOSPC;
         goto out;
     }
@@ -135,20 +142,23 @@ int verifier_interface_on_exit(pid_t pid) {
 int verifier_interface_notify(pid_t pid, struct hq_ctx *ctx) {
     int ret = 0;
 #ifdef HQ_CHECK_SYSCALL
-    void *map = ctx->syscall;
+    struct hq_verifier_map map = {
+        .ptr = ctx->syscall,
+        .sz = SYSCALL_MAP_SIZE,
+    };
+    const struct hq_verifier_map *map_ptr = &map;
 #else
-    void *map = NULL;
+    const struct hq_verifier_map *map_ptr = NULL;
 #endif /* HQ_CHECK_SYSCALL */
     struct hq_verifier_msg msg = {
         .pid = pid,
-        .op = HQ_VERIFIER_MSG_SYSCALL_PAGE,
+        .op = HQ_VERIFIER_MSG_MONITOR,
         .value = 0,
     };
     strncpy(msg.comm, ctx->name, sizeof(msg.comm));
 
-    if ((ret = send_message(&msg, map, true)))
-        pr_warn(
-            "Error while appending SYSCALL_PAGE, dropping verifier message!\n");
+    if ((ret = send_message(&msg, map_ptr, true)))
+        pr_warn("Error while appending MONITOR, dropping verifier message!\n");
 
     return ret;
 }
@@ -173,17 +183,17 @@ static ssize_t interface_verifier_read(struct file *fp, char *buf, size_t len,
 
 static int interface_verifier_mmap(struct file *fp,
                                    struct vm_area_struct *vma) {
-    void *ptr;
+    struct hq_verifier_map map;
     size_t len = vma->vm_end - vma->vm_start;
 
     // Check the mapping arguments are valid
-    if (vma->vm_end <= vma->vm_start || len != SYSCALL_MAP_SIZE ||
+    if (vma->vm_end <= vma->vm_start ||
         (vma->vm_flags & (VM_READ | VM_WRITE | VM_EXEC)) != VM_WRITE ||
         vma->vm_pgoff)
         return -EINVAL;
 
     // Get the next mapping
-    if (!kfifo_get(&map_fifo, &ptr))
+    if (!kfifo_get(&map_fifo, &map) || len != map.sz)
         return -EINVAL;
 
     // Ensure the mapping flags are correct
@@ -192,8 +202,9 @@ static int interface_verifier_mmap(struct file *fp,
                     VM_DONTCOPY | VM_DONTEXPAND | VM_SHARED;
 
     // Map the physical page(s)
-    return remap_pfn_range(vma, vma->vm_start, virt_to_phys(ptr) >> PAGE_SHIFT,
-                           len, vma->vm_page_prot);
+    return remap_pfn_range(vma, vma->vm_start,
+                           virt_to_phys(map.ptr) >> PAGE_SHIFT, len,
+                           vma->vm_page_prot);
 }
 
 static ssize_t interface_verifier_write(struct file *fp, const char *buf,
@@ -239,6 +250,10 @@ static long interface_verifier_ioctl(struct file *fp, unsigned int cmd,
 
 static int interface_verifier_open(struct inode *ip, struct file *fp) {
     int ret = 0;
+    struct hq_verifier_map map = {
+        .ptr = NULL,
+        .sz = NOTIFY_MAP_SIZE,
+    };
     struct hq_verifier_msg msg = {
         .pid = 0,
         .op = HQ_VERIFIER_MSG_NOTIFY,
@@ -249,10 +264,10 @@ static int interface_verifier_open(struct inode *ip, struct file *fp) {
     if (verifier)
         return -EBUSY;
     // Reuse the system call page size
-    verifier = (struct hq_verifier_notify *)__get_free_pages(
-        GFP_KERNEL | __GFP_ZERO, get_order(SYSCALL_MAP_SIZE));
+    map.ptr = verifier = (struct hq_verifier_notify *)__get_free_pages(
+        GFP_KERNEL | __GFP_ZERO, get_order(NOTIFY_MAP_SIZE));
 
-    if ((ret = send_message(&msg, verifier, false))) {
+    if ((ret = send_message(&msg, &map, false))) {
         pr_warn("Error while appending NOTIFY, dropping verifier message!\n");
         return ret;
     }
@@ -280,7 +295,7 @@ static int interface_verifier_release(struct inode *ip, struct file *fp) {
     verifier = NULL;
     spin_unlock_irqrestore(&fifo_lock, flags);
 
-    free_pages((unsigned long)ver, get_order(SYSCALL_MAP_SIZE));
+    free_pages((unsigned long)ver, get_order(NOTIFY_MAP_SIZE));
 
     // Clear the rhashtable
     rhashtable_walk_enter(&hq_table, &iter);

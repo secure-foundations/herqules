@@ -52,6 +52,11 @@ class Verifier {
     ~Verifier() {
         if (*this)
             close(fd);
+
+        if (notify) {
+            unmap(notify, NOTIFY_MAP_SIZE);
+            notify = nullptr;
+        }
     }
 
     bool open() {
@@ -66,16 +71,16 @@ class Verifier {
         return ioctl(fd, IOCTL_KILL_TGID, pid) == 0;
     }
 
-    void *map() {
-        void *map;
-
+    void *map(size_t sz) {
         if (!*this)
             return nullptr;
 
-        map = mmap(nullptr, SYSCALL_MAP_SIZE, PROT_WRITE,
+        void *map = mmap(nullptr, sz, PROT_WRITE,
                    MAP_SHARED_VALIDATE | MAP_POPULATE, fd, 0);
         return map != MAP_FAILED ? map : nullptr;
     }
+
+    static void unmap(void *map, size_t sz) { munmap(map, sz); }
 
     const_iterator begin() { return msgs.begin(); }
 
@@ -98,10 +103,6 @@ class Verifier {
         } while (readn < max && readn % sizeof(msgs[0]));
 
         return &msgs[readn / sizeof(msgs[0])];
-    }
-
-    static void unmap(void *map) {
-        munmap(map, SYSCALL_MAP_SIZE);
     }
 
     bool get_pending() const {

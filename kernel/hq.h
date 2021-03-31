@@ -6,6 +6,7 @@
 
 #include "config.h"
 #include "interfaces.h"
+#include "messages-verifier.h"
 #include "messages.h"
 #include "stats.h"
 

@@ -27,7 +27,10 @@ class Process {
     std::array<std::atomic<unsigned int>, HQ_NUM_STATS> stats = {
         ATOMIC_VAR_INIT(0)};
 
+#ifdef HQ_CHECK_SYSCALL
+    // Shared kernel buffer for controlling system calls
     struct hq_syscall *syscall = nullptr;
+#endif
 #ifdef HQ_PRESERVE_STATS
     bool dead = false;
 #endif /* HQ_PRESERVE_STATS */
@@ -47,22 +50,25 @@ class Process {
             entries = std::move(old.entries);
             for (unsigned i = 0; i < old.stats.size(); ++i)
                 stats[i] = old.stats[i].load();
+#ifdef HQ_CHECK_SYSCALL
             syscall = old.syscall;
+            old.syscall = nullptr;
+#endif
 #ifdef HQ_PRESERVE_STATS
             dead = old.dead;
 #endif /* HQ_PRESERVE_STATS */
-
-            old.syscall = nullptr;
         }
 
         return *this;
     }
 
     void cleanup() {
+#ifdef HQ_CHECK_SYSCALL
         if (syscall) {
-            verifier_interface::unmap(syscall);
+            verifier_interface::unmap(syscall, SYSCALL_MAP_SIZE);
             syscall = nullptr;
         }
+#endif
 
 #ifdef HQ_PRESERVE_STATS
         clear_entries();
@@ -78,10 +84,12 @@ class Process {
     void clear_entries() { entries.clear(); }
     bool parse_msg(const pid_t pid, const volatile struct hq_msg &);
 
+#ifdef HQ_CHECK_SYSCALL
     struct hq_syscall *get_syscall() const {
         return syscall;
     }
     void set_syscall(struct hq_syscall *s) { syscall = s; }
+#endif
 
     const std::string get_name() const { return name; }
     unsigned get_stat(enum hq_stats stat) const { return stats.at(stat); }

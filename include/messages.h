@@ -23,12 +23,6 @@ struct hq_msg {
     uintptr_t values[2];
 } __attribute__((__aligned__(8)));
 
-#ifdef HQ_CHECK_SYSCALL
-struct hq_syscall {
-    int ok;
-};
-#endif /* HQ_CHECK_SYSCALL */
-
 // With four-level paging, 48th bit is used to denote kernel space, and
 // remaining 47 bits denote user-space virtual addresses. Since all address
 // must be in virtual space, we can store the size in the upper 17 bits.

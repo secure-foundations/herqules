@@ -217,8 +217,8 @@ static void tracepoint_sys_enter(void *data, struct pt_regs *regs, long id) {
             }
 
             // System call allowed, continue execution
-            if (atomic_read_acquire((atomic_t *)app->syscall)) {
-                atomic_set_release((atomic_t *)app->syscall, 0);
+            if (atomic_read_acquire((atomic_t *)&app->syscall->ok)) {
+                atomic_set_release((atomic_t *)&app->syscall->ok, 0);
                 atomic_inc(&app->stats[after ? HQ_STAT_NUM_SYSCALLS_ABOVE
                                              : HQ_STAT_NUM_SYSCALLS_BELOW]);
                 goto out;

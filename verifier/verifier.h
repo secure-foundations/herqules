@@ -155,14 +155,14 @@ template <typename V, typename RX> class Verifier {
 
             switch (begin->op) {
             case HQ_VERIFIER_MSG_NOTIFY: {
-                void *notify;
-                if (!(notify = kernel.map())) {
+                struct hq_verifier_notify *notify;
+                if (!(notify = reinterpret_cast<struct hq_verifier_notify *>(
+                          kernel.map(NOTIFY_MAP_SIZE)))) {
                     std::cerr << "Failed to map notify page!" << std::endl;
                     return false;
                 }
 
-                return kernel.set_notify(
-                    reinterpret_cast<struct hq_verifier_notify *>(notify));
+                return kernel.set_notify(notify);
             } break;
 
             case HQ_VERIFIER_MSG_CLONE: {
@@ -200,24 +200,23 @@ template <typename V, typename RX> class Verifier {
                           << begin->value << "!" << std::endl;
 
 #ifdef HQ_CHECK_SYSCALL
-                void *page;
+                struct hq_syscall *page;
                 // Set the system call buffer
-                if (!(page = kernel.map())) {
+                if (!(page = reinterpret_cast<struct hq_syscall *>(
+                          kernel.map(sizeof(*page))))) {
                     std::cerr << "PID: " << std::dec << pid
                               << " Failed to map syscall page(s)!" << std::endl;
                     return false;
                 }
 
-                res.first->second.set_syscall(
-                    reinterpret_cast<struct hq_syscall *>(page));
+                res.first->second.set_syscall(page);
 #endif /* HQ_CHECK_SYSCALL */
             } break;
 
-            case HQ_VERIFIER_MSG_SYSCALL_PAGE: {
+            case HQ_VERIFIER_MSG_MONITOR: {
                 bool insert;
                 // Create new process
-                std::tie(it, insert) =
-                    processes.try_emplace(pid, begin->comm);
+                std::tie(it, insert) = processes.try_emplace(pid, begin->comm);
                 if (!insert) {
                     std::cerr << "PID: " << std::dec << pid
                               << " Already exists!" << std::endl;
@@ -230,16 +229,16 @@ template <typename V, typename RX> class Verifier {
                           << std::endl;
 
 #ifdef HQ_CHECK_SYSCALL
-                void *page;
+                struct hq_syscall *page;
                 // Set the system call buffer
-                if (!(page = kernel.map())) {
+                if (!(page = reinterpret_cast<struct hq_syscall *>(
+                          kernel.map(SYSCALL_MAP_SIZE)))) {
                     std::cerr << "PID: " << std::dec << pid
                               << " Failed to map syscall page(s)!" << std::endl;
                     return false;
                 }
 
-                previous->second.set_syscall(
-                    reinterpret_cast<struct hq_syscall *>(page));
+                previous->second.set_syscall(page);
 #endif /* HQ_CHECK_SYSCALL */
             } break;
 
